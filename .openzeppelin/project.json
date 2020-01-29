@@ -1,0 +1,21 @@
+{
+  "manifestVersion": "2.2",
+  "contracts": {
+    "Pod": "Pod"
+  },
+  "dependencies": {},
+  "name": "pooltogether-pods",
+  "version": "0.2",
+  "compiler": {
+    "manager": "openzeppelin",
+    "compilerSettings": {
+      "optimizer": {
+        "enabled": true,
+        "runs": "200"
+      },
+      "evmVersion": "constantinople"
+    },
+    "solcVersion": "0.5.12"
+  },
+  "telemetryOptIn": false
+}
