@@ -12,6 +12,7 @@ zos.dev*.json
 .openzeppelin/.session
 .openzeppelin/dev-*.json
 .oz-migrate/mainnet_fork
+.oz-migrate/local
 coverage
 coverage.json
 test-results.xml

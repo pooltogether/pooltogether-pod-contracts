@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "description": "PoolTogether Pods: combine your tickets together for a better chance to win!",
   "main": "index.js",
+  "homepage": "https://github.com/pooltogether/pods",
   "repository": "git@github.com:pooltogether/pooltogether-contracts.git",
+  "license": "GPL-3.0",
   "author": "Brendan Asselstine brendan@pooltogether.us",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "truffle test --migrations_directory ./migrations/empty",
     "coverage": "COVERAGE=true truffle run coverage --migrations_directory ./migrations/empty",
@@ -16,21 +21,22 @@
     "session": "openzeppelin session --from $ADMIN_ADDRESS --network local --expires 7200 --timeout 3600",
     "session-kovan": "openzeppelin session --from $ADMIN_ADDRESS --network kovan --expires 7200 --timeout 3600",
     "push": "openzeppelin push",
-    "console": "oz-console --network $LOCALHOST_URL -c .openzeppelin/dev-999.json",
+    "console": "oz-console --network http://127.0.0.1:8545 -c .openzeppelin/dev-1234.json -m \"$HDWALLET_MNEMONIC\"",
     "console-mainnet": "oz-console --network mainnet -m \"$HDWALLET_MNEMONIC\"",
     "console-kovan": "oz-console --network $INFURA_PROVIDER_URL_KOVAN -c .openzeppelin/kovan.json -m \"$HDWALLET_MNEMONIC\"",
     "version": "truffle version",
     "extract-abis": "oz compile && truffle-extract -o abis",
     "docs": "solidity-docgen -i contracts -d node_modules/@openzeppelin/contracts-ethereum-package/contracts/access/roles/MinterRole.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20Mintable.sol,node_modules/@openzeppelin/upgrades/contracts/Initializable.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/access/Roles.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol,node_modules/@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol,node_modules/@kleros/kleros/contracts/data-structures/SortitionSumTreeFactory.sol,node_modules/fixidity/contracts/FixidityLib.sol -o docs --solc-module=./node_modules/solc --solc-settings='{\"remappings\": [\"contracts/DrawManager.sol:@kleros=node_modules/@kleros\",\":@openzeppelin=node_modules/@openzeppelin\",\":fixidity=node_modules/fixidity\"]}'",
-    "solc": "cat solc_input.json | solcjs --standard-json"
+    "solc": "cat solc_input.json | solcjs --standard-json",
+    "prepack": "rm -rf build && oz compile && truffle-extract -o abis",
+    "postpublish" : "PACKAGE_VERSION=$(cat package.json | grep \\\"version\\\" | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]') && git tag v$PACKAGE_VERSION && git push --tags"
   },
   "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "pooltogether/openzeppelin-contracts-ethereum-package#bd88334148ea45e49dc849442851f6f4f50ac74c",
-    "@pooltogether/pooltogether-contracts": "pooltogether/pooltogether-contracts#master"
+    "@pooltogether/pooltogether-contracts": "0.2.7"
   },
   "devDependencies": {
-    "@0x/sol-trace": "^3.0.0",
-    "@0x/web3-wrapper": "^7.0.0",
+    "mkdirp": "^0.5.1",
     "@openzeppelin/cli": "2.6.0",
     "apollo-fetch": "^0.7.0",
     "chai": "^4.2.0",
@@ -40,15 +46,14 @@
     "ethers": "^4.0.40",
     "ganache-cli": "6.7.0",
     "mocha-junit-reporter": "1.23.1",
-    "oz-console": "1.1.2",
-    "oz-migrate": "^0.2.2",
+    "oz-console": "1.1.3",
+    "@pooltogether/oz-migrate": "^0.2.5",
     "shelljs": "0.8.3",
     "solc": "0.5.12",
     "solidity-coverage": "0.7.0-beta.2",
     "truffle": "5.0.42",
     "truffle-deploy-registry": "0.5.0",
     "truffle-extract": "pooltogether/truffle-extract#2a57b6e63a8a2057aad0fec63ba255cd46e9ff1d",
-    "truffle-hdwallet-provider": "1.0.0-web3one.5",
-    "zos-truffle-merge": "0.0.3"
+    "truffle-hdwallet-provider": "1.0.0-web3one.5"
   }
 }

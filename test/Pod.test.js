@@ -1,12 +1,12 @@
-const toWei = require('@pooltogether/pooltogether-contracts/test/helpers/toWei')
-const chai = require('@pooltogether/pooltogether-contracts/test/helpers/chai')
-const PoolContext = require('@pooltogether/pooltogether-contracts/test/helpers/PoolContext')
+const toWei = require('./helpers/toWei')
+const chai = require('./helpers/chai')
+const PoolContext = require('./helpers/PoolContext')
 const Pod = artifacts.require('Pod.sol')
 const PodContext = require('./helpers/PodContext')
 const BN = require('bn.js')
 const {
   ZERO_ADDRESS
-} = require('@pooltogether/pooltogether-contracts/test/helpers/constants')
+} = require('./helpers/constants')
 
 contract('Pod', (accounts) => {
   const [owner, admin, user1, user2, user3] = accounts
