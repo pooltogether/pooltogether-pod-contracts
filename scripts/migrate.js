@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-const { Project } = require('oz-migrate')
+const { Project } = require('@pooltogether/oz-migrate')
 const chalk = require('chalk')
-const chai = require('chai')
 const { runShell } = require('./runShell')
 
 async function migrate(context, ozNetworkName, ozOptions = '') {
