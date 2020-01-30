@@ -1,5 +1,6 @@
 node_modules*
 .ganache
+.history
 build
 networks/*
 .DS_Store
