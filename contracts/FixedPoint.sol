@@ -29,8 +29,12 @@ contract FixedPoint {
   }
 
   function divideUintByFixed(uint256 dividend, Fixed18 memory divisor) internal pure returns (uint256) {
+    return divideUintByMantissa(dividend, divisor.mantissa);
+  }
+
+  function divideUintByMantissa(uint256 dividend, uint256 mantissa) public pure returns (uint256) {
     uint256 result = SCALE.mul(dividend);
-    result = result.div(divisor.mantissa);
+    result = result.div(mantissa);
     return result;
   }
 }

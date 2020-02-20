@@ -8,6 +8,8 @@ const {
   ZERO_ADDRESS
 } = require('./helpers/constants')
 
+const tenMillion = toWei('10000000')
+
 contract('Pod', (accounts) => {
   const [owner, admin, user1, user2, user3] = accounts
 
@@ -16,6 +18,7 @@ contract('Pod', (accounts) => {
 
   let poolContext = new PoolContext({ web3, artifacts, accounts })
   let podContext = new PodContext({ artifacts, poolContext })
+
 
   beforeEach(async () => {
     await poolContext.init()
@@ -27,15 +30,59 @@ contract('Pod', (accounts) => {
     pod = await podContext.createPod()
   })
 
+  async function printPending() {
+    let pendingSupply = (await pod.pendingSupply()).toString()
+    let pendingDrawId = (await pod.pendingDrawId()).toString()
+    console.log({ 
+      pendingSupply, pendingDrawId
+    })
+  }
+
+  async function printLast(address) {
+    let lastDeposit = (await pod.lastDeposits(address)).toString()
+    let lastDrawId = (await pod.lastDrawIds(address)).toString()
+    console.log({ 
+      lastDeposit, lastDrawId
+    })
+  }
+
+  /**
+   * 1. Deposits into the pool
+   * 2. Rewards the pool
+   * 3. Transfers tickets to pod
+   * 
+   * Once this function is complete, the pod will have tickets
+   * 
+   * @param {*} amount 
+   * @param {*} user 
+   * @param {*} options 
+   */
   async function depositDrawTransfer(amount, user, options = {}) {
+    const prize = options.prize || toWei('2')
+
     // deposit into pool
     await poolContext.depositPool(amount, { from: user })
-    // commit and mint tickets
-    await podContext.nextDraw({ prize: options.prize || toWei('2') })
-    // transfer into pod
-    await poolToken.transfer(pod.address, amount, { from: user })
 
-    const [ Minted ] = await pod.getPastEvents('Minted')
+    let committedDrawId = await pool.currentCommittedDrawId()
+    let openDrawId = await pool.currentOpenDrawId()
+
+    // commit and mint tickets
+    await podContext.nextDraw({ prize })
+
+    // console.log({ prize, committedDrawId })
+
+    let totalSupply = (await pod.totalSupply()).toString()
+    let committedSupply = (await pool.committedSupply()).toString()
+    let pendingCollateralSupply = (await pod.pendingCollateralSupply()).toString()
+
+    // console.log({ totalSupply, committedSupply, pendingCollateralSupply })
+
+    await pod.rewarded(prize, openDrawId)
+
+    // transfer into pod
+    const { logs } = await poolToken.transfer(pod.address, amount, { from: user })
+
+    const Minted = logs.slice().reverse().find((value => value.event === 'Minted'))
 
     chai.expect(Minted.event).to.equal('Minted')
     chai.expect(Minted.args.operator).to.equal(pod.address)
@@ -60,9 +107,9 @@ contract('Pod', (accounts) => {
       pod = await podContext.createPod()
     })
 
-    describe('exchangeRate()', () => {
+    describe('currentExchangeRateMantissa()', () => {
       it('should default to one million', async () => {
-        assert.equal(await pod.exchangeRate(), toWei('1000000'))
+        assert.equal(await pod.currentExchangeRateMantissa(), toWei('1000000'))
       })
     })
 
@@ -73,7 +120,6 @@ contract('Pod', (accounts) => {
         await depositDrawTransfer(amount, user1)
 
         // now should have 10 million tokens
-        const tenMillion = toWei('10000000')
         assert.equal(await pod.balanceOf(user1), tenMillion)
         assert.equal(await pod.totalSupply(), tenMillion)
 
@@ -97,7 +143,6 @@ contract('Pod', (accounts) => {
         // transfer into pod
         await poolToken.transfer(pod.address, amount, { from: user2 })
 
-        const tenMillion = toWei('10000000')
         // both should have 10 million tokens
         assert.equal(await pod.balanceOf(user1), tenMillion)
         assert.equal(await pod.balanceOf(user2), tenMillion)
@@ -112,8 +157,9 @@ contract('Pod', (accounts) => {
         // deposit, reward, and transfer.
         await depositDrawTransfer(amount, user2)
 
-        const tenMillion = toWei('10000000')
         assert.equal(await pod.balanceOf(user1), tenMillion)
+
+        // console.log({ exchangeRate: (await pod.currentExchangeRateMantissa()).toString() })
 
         assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('12'))
         assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('10'))
@@ -140,29 +186,28 @@ contract('Pod', (accounts) => {
         const amount = toWei('10')
         // deposit, reward, and transfer.
         await depositDrawTransfer(amount, user1)
-        // deposit, reward, and transfer.
-        await depositDrawTransfer(amount, user2)
-        // deposit, reward, and transfer.
-        await depositDrawTransfer(amount, user3)
+        // user1 now has ten million pod shares
+        assert.equal((await pod.balanceOf(user1)).toString(), tenMillion)
+        
+        let tokenBalanceBefore = await token.balanceOf(user1)
+        await pod.redeem(tenMillion, [], { from: user1 })
+        let tokenBalanceAfter = await token.balanceOf(user1)
+        
+        // have all of their dai
+        assert.equal(tokenBalanceAfter.sub(tokenBalanceBefore).toString(), '10000000000000000000')
 
-        let balanceBefore = await token.balanceOf(user1)
-        await pod.redeem(await pod.balanceOf(user1), [], { from: user1 })
-        let balanceAfter = await token.balanceOf(user1)
-        assert.equal(balanceAfter.sub(balanceBefore).toString(), '13090909090909090909')
+        // have zero pod tokens
+        assert.equal((await pod.balanceOf(user1)).toString(), '0')
+      })
 
-        balanceBefore = await token.balanceOf(user2)
-        await pod.redeem(await pod.balanceOf(user2), [], { from: user2 })
-        balanceAfter = await token.balanceOf(user2)
-        assert.equal(balanceAfter.sub(balanceBefore).toString(), '10909090909090909090')
+      it('should allow a user to redeem zero tokens', async () => {
+        // Ensure committed draw
+        await podContext.nextDraw()
 
-        // now just user3 is left.
-        await podContext.nextDraw({ prize: toWei('2') })
-        // they should have just won 2 dai
-
-        balanceBefore = await token.balanceOf(user3)
-        await pod.redeem(await pod.balanceOf(user3), [], { from: user3 })
-        balanceAfter = await token.balanceOf(user3)
-        assert.equal(balanceAfter.sub(balanceBefore).toString(), '12000000000000000001')
+        let tokenBalanceBefore = await token.balanceOf(user1)
+        await pod.redeem('0', [], { from: user1 })
+        let tokenBalanceAfter = await token.balanceOf(user1)
+        assert.equal(tokenBalanceAfter.sub(tokenBalanceBefore).toString(), '0')
       })
     })
 
@@ -198,24 +243,6 @@ contract('Pod', (accounts) => {
     describe('burn()', () => {
       it('should revert', async () => {
         await chai.assert.isRejected(pod.burn(toWei('10'), []), /Pod\/no-op/)
-      })
-    })
-
-    describe('draw()', () => {
-      it('should return the zero address if no one exists', async () => {
-        assert.equal(await pod.draw(14), ZERO_ADDRESS)
-      })
-    })
-
-    describe('drawWithEntropy()', () => {
-      it('should return the zero address if no one exists', async () => {
-        assert.equal(await pod.drawWithEntropy(web3.utils.randomHex(32)), ZERO_ADDRESS)
-      })
-
-      it('should allow a user to be selected', async () => {
-        const amount = toWei('10')
-        await depositDrawTransfer(amount, user1)
-        assert.equal(await pod.drawWithEntropy(web3.utils.randomHex(32)), user1)
       })
     })
   })
