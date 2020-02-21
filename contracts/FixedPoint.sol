@@ -2,8 +2,8 @@ pragma solidity ^0.5.12;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
-// Algorithm taken from https://accu.org/index.php/journals/1717
-contract FixedPoint {
+// See https://accu.org/index.php/journals/1717
+library FixedPoint {
   using SafeMath for uint256;
 
   uint256 public constant SCALE = 1e18;
@@ -12,23 +12,19 @@ contract FixedPoint {
     uint256 mantissa;
   }
 
-  function newFixed(uint256 mantissa) internal pure returns (Fixed18 memory) {
-    return Fixed18(mantissa);
-  }
-
-  function newFixed(uint256 numerator, uint256 denominator) internal pure returns (Fixed18 memory) {
+  function calculateMantissa(uint256 numerator, uint256 denominator) public pure returns (uint256) {
     uint256 mantissa = numerator.mul(SCALE);
     mantissa = mantissa.div(denominator);
-    return Fixed18(mantissa);
+    return mantissa;
   }
 
-  function multiplyUint(Fixed18 memory f, uint256 b) internal pure returns (uint256) {
+  function multiplyUint(Fixed18 storage f, uint256 b) public view returns (uint256) {
     uint256 result = f.mantissa.mul(b);
     result = result.div(SCALE);
     return result;
   }
 
-  function divideUintByFixed(uint256 dividend, Fixed18 memory divisor) internal pure returns (uint256) {
+  function divideUintByFixed(uint256 dividend, Fixed18 storage divisor) public view returns (uint256) {
     return divideUintByMantissa(dividend, divisor.mantissa);
   }
 
