@@ -94,6 +94,7 @@ contract('Pod', (accounts) => {
     it('should initialize the contract properly', async () => {
       assert.equal(await pod.pool(), pool.address)
       assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('ERC777TokensRecipient')), pod.address)
+      assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('PoolTogetherRewardListener')), pod.address)
     })
   })
 

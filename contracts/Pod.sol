@@ -20,6 +20,10 @@ contract Pod is ERC777, IERC777Recipient {
   using ExchangeRateTracker for ExchangeRateTracker.State;
 
   uint256 internal constant BASE_EXCHANGE_RATE_MANTISSA = 1e24;
+  
+  // keccak256("PoolTogetherRewardListener")
+  bytes32 constant internal REWARD_LISTENER_INTERFACE_HASH =
+      0x68f03b0b1a978ee238a70b362091d993343460bc1a2830ab3f708936d9f564a4;
 
   // keccak256("ERC777TokensRecipient")
   bytes32 constant internal TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -44,6 +48,7 @@ contract Pod is ERC777, IERC777Recipient {
     exchangeRateTracker.initialize(BASE_EXCHANGE_RATE_MANTISSA);
     pool = _pool;
     ERC1820_REGISTRY.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+    ERC1820_REGISTRY.setInterfaceImplementer(address(this), REWARD_LISTENER_INTERFACE_HASH, address(this));
   }
 
   function tokensReceived(
@@ -146,9 +151,7 @@ contract Pod is ERC777, IERC777Recipient {
       uint256 collateral = exchangeRateTracker.tokenToCollateralValue(amount);
       pool.withdrawCommittedDeposit(collateral);
       pool.token().transfer(from, collateral);
-
       emit Redeemed(operator, from, amount, data, operatorData);
-
       _burn(operator, from, amount, data, operatorData);
   }
 
@@ -167,15 +170,7 @@ contract Pod is ERC777, IERC777Recipient {
     uint256 tokens = exchangeRateTracker.collateralToTokenValue(scheduledDeposits.balanceBefore(user, timestamp));
     if (tokens > 0) {
       scheduledDeposits.clearBalance(user);
-      _send(
-        address(this),
-        address(this),
-        user,
-        tokens,
-        "",
-        "",
-        true
-      );
+      _send(address(this), address(this), user, tokens, "", "", true);
     }
   }
 }
