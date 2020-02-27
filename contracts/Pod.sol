@@ -7,20 +7,24 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.s
 import "@kleros/kleros/contracts/data-structures/SortitionSumTreeFactory.sol";
 import "@pooltogether/pooltogether-contracts/contracts/UniformRandomNumber.sol";
 import "@pooltogether/pooltogether-contracts/contracts/MCDAwarePool.sol";
+import "@pooltogether/pooltogether-contracts/contracts/IRewardListener.sol";
 
-import "./ScheduledDeposits.sol";
+import "./SupplyBuffer.sol";
+import "./BalanceBuffer.sol";
 import "./ExchangeRateTracker.sol";
 
 /**
  * Exchange rate == tokens / collateral.  So Given collateral Y the tokens = rate * collateral
  * Determining the underlying collateral given tokens would be tokens / rate
  */
-contract Pod is ERC777, IERC777Recipient {
-  using ScheduledDeposits for ScheduledDeposits.State;
+contract Pod is ERC777, IERC777Recipient, IRewardListener {
+  using SupplyBuffer for SupplyBuffer.State;
+  using BalanceBuffer for BalanceBuffer.State;
+
   using ExchangeRateTracker for ExchangeRateTracker.State;
 
   uint256 internal constant BASE_EXCHANGE_RATE_MANTISSA = 1e24;
-  
+
   // keccak256("PoolTogetherRewardListener")
   bytes32 constant internal REWARD_LISTENER_INTERFACE_HASH =
       0x68f03b0b1a978ee238a70b362091d993343460bc1a2830ab3f708936d9f564a4;
@@ -32,12 +36,21 @@ contract Pod is ERC777, IERC777Recipient {
   IERC1820Registry constant internal ERC1820_REGISTRY = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
   /**
-   * Event emitted when a user or operator redeems tokens
+   * Event emitted when a user or operator redeems tokens to the backing collateral
    */
-  event Redeemed(address indexed operator, address indexed from, uint256 amount, bytes data, bytes operatorData);
+  event Redeemed(address indexed operator, address indexed from, uint256 amount, uint256 collateral, bytes data, bytes operatorData);
+
+  /**
+   * Event emitted when a user or operator redeems tokens to the backing collateral
+   */
+  event RedeemedToPool(address indexed operator, address indexed from, uint256 amount, uint256 collateral, bytes data, bytes operatorData);
+
   event CollateralizationChanged(uint256 indexed timestamp, uint256 tokens, uint256 collateral, uint256 mantissa);
 
-  ScheduledDeposits.State internal scheduledDeposits;
+  event Deposited(address indexed operator, address indexed from, uint256 collateral, bytes data, bytes operatorData);
+
+  SupplyBuffer.State internal supplyBuffer;
+  BalanceBuffer.State internal balanceBuffer;
   ExchangeRateTracker.State internal exchangeRateTracker;
   MCDAwarePool public pool;
 
@@ -51,19 +64,46 @@ contract Pod is ERC777, IERC777Recipient {
     ERC1820_REGISTRY.setInterfaceImplementer(address(this), REWARD_LISTENER_INTERFACE_HASH, address(this));
   }
 
+  function operatorDeposit(address user, uint256 amount) external {
+    _deposit(msg.sender, user, amount);
+  }
+
+  function deposit(uint256 amount) external {
+    _deposit(msg.sender, msg.sender, amount);
+  }
+
+  function _deposit(
+    address operator,
+    address from,
+    uint256 amount
+  ) internal {
+    consolidateBalanceOf(from);
+    pool.token().transferFrom(operator, address(this), amount);
+    pool.token().approve(address(pool), amount);
+    pool.depositPool(amount);
+    uint256 openDrawId = pool.currentOpenDrawId();
+    supplyBuffer.deposit(amount, openDrawId);
+    balanceBuffer.deposit(from, amount, openDrawId);
+    emit Deposited(operator, operator, amount, "", "");
+  }
+
   function tokensReceived(
-    address, // operator
+    address operator, // operator
     address from,
     address, // to address can't be anything but us because we don't implement ERC1820ImplementerInterface
     uint256 amount,
     bytes calldata,
     bytes calldata
   ) external {
-    // if this is a transfer from the pool
+    // if this is a transfer of pool tickets
     if (msg.sender == address(pool.poolToken())) {
+      // convert to shares
       consolidateBalanceOf(from);
       uint256 tokens = exchangeRateTracker.collateralToTokenValue(amount);
       _mint(address(this), from, tokens, "", "");
+    } else {
+      // The only other allowed tokens are ones we operate
+      require(operator == address(this), "Pod/unknown-token");
     }
   }
 
@@ -72,17 +112,23 @@ contract Pod is ERC777, IERC777Recipient {
   }
 
   function balanceOf(address tokenHolder) public view returns (uint256) {
+    (uint256 balance, uint256 drawId) = balanceBuffer.committedBalanceInfo(tokenHolder, pool.currentOpenDrawId());
     return super.balanceOf(tokenHolder).add(
       exchangeRateTracker.collateralToTokenValue(
-        scheduledDeposits.balanceBefore(tokenHolder, pool.currentOpenDrawId())
+        balance,
+        drawId
       )
     );
+  }
+
+  function pendingDeposit(address user) public view returns (uint256) {
+    return balanceBuffer.openBalanceOf(user, pool.currentOpenDrawId());
   }
 
   function totalSupply() public view returns (uint256) {
     return super.totalSupply().add(
       exchangeRateTracker.collateralToTokenValue(
-        scheduledDeposits.supplyBefore(pool.currentOpenDrawId())
+        supplyBuffer.committedSupply(pool.currentOpenDrawId())
       )
     );
   }
@@ -106,16 +152,17 @@ contract Pod is ERC777, IERC777Recipient {
   }
 
   // upon reward, batch mint tokens.
-  function rewarded(uint256, uint256 rewardedDrawId) public {
-    uint256 collateral = pool.committedBalanceOf(address(this)) - scheduledDeposits.supplyBefore(rewardedDrawId);
+  function rewarded(address, uint256 winnings, uint256 drawId) external {
+    require(msg.sender == address(pool), "Pod/only-pool");
     uint256 tokens = totalSupply();
+    uint256 collateral = exchangeRateTracker.tokenToCollateralValue(tokens).add(winnings);
     if (tokens > 0) {
-      uint256 mantissa = exchangeRateTracker.collateralizationChanged(tokens, collateral, rewardedDrawId);
-      emit CollateralizationChanged(rewardedDrawId, tokens, collateral, mantissa);
+      uint256 mantissa = exchangeRateTracker.collateralizationChanged(tokens, collateral, drawId.add(1));
+      emit CollateralizationChanged(drawId, tokens, collateral, mantissa);
     }
   }
 
-  function currentExchangeRateMantissa() public view returns (uint256) {
+  function currentExchangeRateMantissa() external view returns (uint256) {
     return exchangeRateTracker.currentExchangeRateMantissa();
   }
 
@@ -145,31 +192,56 @@ contract Pod is ERC777, IERC777Recipient {
       bytes memory data,
       bytes memory operatorData
   )
-      private
+      internal
   {
       consolidateBalanceOf(from);
       uint256 collateral = exchangeRateTracker.tokenToCollateralValue(amount);
       pool.withdrawCommittedDeposit(collateral);
       pool.token().transfer(from, collateral);
-      emit Redeemed(operator, from, amount, data, operatorData);
+      emit Redeemed(operator, from, amount, collateral, data, operatorData);
       _burn(operator, from, amount, data, operatorData);
   }
 
-  function consolidateSupply() public {
-    uint256 timestamp = pool.currentOpenDrawId();
-    uint256 tokens = exchangeRateTracker.collateralToTokenValue(scheduledDeposits.supplyBefore(timestamp));
+  /**
+    */
+  function operatorRedeemToPool(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
+    require(isOperatorFor(msg.sender, account), "Pod/not-op");
+    _redeemToPool(msg.sender, account, amount, data, operatorData);
+  }
+
+  function redeemToPool(uint256 amount, bytes calldata data) external {
+    _redeemToPool(msg.sender, msg.sender, amount, data, "");
+  }
+
+  function _redeemToPool(
+    address operator,
+    address from,
+    uint256 amount,
+    bytes memory data,
+    bytes memory operatorData
+  ) internal {
+    consolidateBalanceOf(from);
+    uint256 collateral = exchangeRateTracker.tokenToCollateralValue(amount);
+    pool.poolToken().transfer(from, collateral);
+    emit RedeemedToPool(operator, from, amount, collateral, data, operatorData);
+    _burn(operator, from, amount, data, operatorData);
+  }
+
+  function consolidateSupply() internal {
+    uint256 openDrawId = pool.currentOpenDrawId();
+    uint256 tokens = exchangeRateTracker.collateralToTokenValue(supplyBuffer.committedSupply(openDrawId));
     if (tokens > 0) {
-      scheduledDeposits.clearSupply();
+      supplyBuffer.clearCommitted(openDrawId);
       _mint(address(this), address(this), tokens, "", "");
     }
   }
 
-  function consolidateBalanceOf(address user) public {
+  function consolidateBalanceOf(address user) internal {
     consolidateSupply();
-    uint256 timestamp = pool.currentOpenDrawId();
-    uint256 tokens = exchangeRateTracker.collateralToTokenValue(scheduledDeposits.balanceBefore(user, timestamp));
+    uint256 openDrawId = pool.currentOpenDrawId();
+    uint256 tokens = exchangeRateTracker.collateralToTokenValue(balanceBuffer.committedBalanceOf(user, openDrawId));
     if (tokens > 0) {
-      scheduledDeposits.clearBalance(user);
+      balanceBuffer.clearCommitted(user, openDrawId);
       _send(address(this), address(this), user, tokens, "", "", true);
     }
   }

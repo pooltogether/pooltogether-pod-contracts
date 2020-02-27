@@ -480,10 +480,9 @@
   dependencies:
     mkdirp "^0.5.0"
 
-"@pooltogether/pooltogether-contracts@0.2.7":
-  version "0.2.7"
-  resolved "https://registry.yarnpkg.com/@pooltogether/pooltogether-contracts/-/pooltogether-contracts-0.2.7.tgz#c30d2b50f9c50e6df447e8ffd4373001d8ccc264"
-  integrity sha512-V/YA0JgbL/byBnkIU5ZE8yxIbXl4HaZzJ1szRmrM9i9anZXbDVNGMpqORG8c7OeuRcao/W/UX5jaFqvp+g37Wg==
+"@pooltogether/pooltogether-contracts@pooltogether/pooltogether-contracts#master":
+  version "0.2.9"
+  resolved "https://codeload.github.com/pooltogether/pooltogether-contracts/tar.gz/95046d60f135e26360b9790349151a9625d6599e"
   dependencies:
     "@kleros/kleros" DeltaCamp/kleros#ca7fbdcc195cfd1267efb99aae905c3400a5ea5f
     "@openzeppelin/contracts-ethereum-package" "2.4.0"

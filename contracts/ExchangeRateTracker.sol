@@ -52,8 +52,8 @@ library ExchangeRateTracker {
   }
 
   function search(State storage self, uint256 drawId) internal view returns (uint256) {
-    require(self.exchangeRates.length > 0, "ExchangeRates/empty");
-    require(drawId >= self.exchangeRates[0].timestamp, "ExchangeRates/bounds");
+    require(self.exchangeRates.length > 0, "ExchangeRateTracker/empty");
+    require(drawId >= self.exchangeRates[0].timestamp, "ExchangeRateTracker/bounds");
 
     uint256 lowerBound = 0;
     uint256 upperBound = self.exchangeRates.length;

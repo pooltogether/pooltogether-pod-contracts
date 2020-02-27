@@ -34,7 +34,7 @@
   "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "openzeppelin/openzeppelin-contracts-ethereum-package#c5fa02f0c502d9d28bdec601637fc548834c86c5",
     "@openzeppelin/upgrades": "^2.7.1",
-    "@pooltogether/pooltogether-contracts": "0.2.7"
+    "@pooltogether/pooltogether-contracts": "pooltogether/pooltogether-contracts#master"
   },
   "devDependencies": {
     "@openzeppelin/cli": "2.6.0",
