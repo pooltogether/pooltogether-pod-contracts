@@ -9,8 +9,7 @@ import "@pooltogether/pooltogether-contracts/contracts/UniformRandomNumber.sol";
 import "@pooltogether/pooltogether-contracts/contracts/MCDAwarePool.sol";
 import "@pooltogether/pooltogether-contracts/contracts/IRewardListener.sol";
 
-import "./SupplyBuffer.sol";
-import "./BalanceBuffer.sol";
+import "./ScheduledBalance.sol";
 import "./ExchangeRateTracker.sol";
 
 /**
@@ -18,8 +17,7 @@ import "./ExchangeRateTracker.sol";
  * Determining the underlying collateral given tokens would be tokens / rate
  */
 contract Pod is ERC777, IERC777Recipient, IRewardListener {
-  using SupplyBuffer for SupplyBuffer.State;
-  using BalanceBuffer for BalanceBuffer.State;
+  using ScheduledBalance for ScheduledBalance.State;
 
   using ExchangeRateTracker for ExchangeRateTracker.State;
 
@@ -49,8 +47,8 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
 
   event Deposited(address indexed operator, address indexed from, uint256 collateral, bytes data, bytes operatorData);
 
-  SupplyBuffer.State internal supplyBuffer;
-  BalanceBuffer.State internal balanceBuffer;
+  ScheduledBalance.State internal scheduledSupply;
+  mapping(address => ScheduledBalance.State) internal scheduledBalances;
   ExchangeRateTracker.State internal exchangeRateTracker;
   MCDAwarePool public pool;
 
@@ -82,8 +80,8 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
     pool.token().approve(address(pool), amount);
     pool.depositPool(amount);
     uint256 openDrawId = pool.currentOpenDrawId();
-    supplyBuffer.deposit(amount, openDrawId);
-    balanceBuffer.deposit(from, amount, openDrawId);
+    scheduledSupply.deposit(amount, openDrawId);
+    scheduledBalances[from].deposit(amount, openDrawId);
     emit Deposited(operator, operator, amount, "", "");
   }
 
@@ -112,7 +110,7 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
   }
 
   function balanceOf(address tokenHolder) public view returns (uint256) {
-    (uint256 balance, uint256 drawId) = balanceBuffer.committedBalanceInfo(tokenHolder, pool.currentOpenDrawId());
+    (uint256 balance, uint256 drawId) = scheduledBalances[tokenHolder].consolidatedBalanceInfo(pool.currentOpenDrawId());
     return super.balanceOf(tokenHolder).add(
       exchangeRateTracker.collateralToTokenValue(
         balance,
@@ -122,13 +120,15 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
   }
 
   function pendingDeposit(address user) public view returns (uint256) {
-    return balanceBuffer.openBalanceOf(user, pool.currentOpenDrawId());
+    return scheduledBalances[user].unconsolidatedBalance(pool.currentOpenDrawId());
   }
 
   function totalSupply() public view returns (uint256) {
+    (uint256 balance, uint256 drawId) = scheduledSupply.consolidatedBalanceInfo(pool.currentOpenDrawId());
     return super.totalSupply().add(
       exchangeRateTracker.collateralToTokenValue(
-        supplyBuffer.committedSupply(pool.currentOpenDrawId())
+        balance,
+        drawId
       )
     );
   }
@@ -202,8 +202,6 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
       _burn(operator, from, amount, data, operatorData);
   }
 
-  /**
-    */
   function operatorRedeemToPool(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
     require(isOperatorFor(msg.sender, account), "Pod/not-op");
     _redeemToPool(msg.sender, account, amount, data, operatorData);
@@ -229,9 +227,10 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
 
   function consolidateSupply() internal {
     uint256 openDrawId = pool.currentOpenDrawId();
-    uint256 tokens = exchangeRateTracker.collateralToTokenValue(supplyBuffer.committedSupply(openDrawId));
+    (uint256 balance, uint256 drawId) = scheduledSupply.consolidatedBalanceInfo(openDrawId);
+    uint256 tokens = exchangeRateTracker.collateralToTokenValue(balance, drawId);
     if (tokens > 0) {
-      supplyBuffer.clearCommitted(openDrawId);
+      scheduledSupply.clearConsolidated(openDrawId);
       _mint(address(this), address(this), tokens, "", "");
     }
   }
@@ -239,9 +238,10 @@ contract Pod is ERC777, IERC777Recipient, IRewardListener {
   function consolidateBalanceOf(address user) internal {
     consolidateSupply();
     uint256 openDrawId = pool.currentOpenDrawId();
-    uint256 tokens = exchangeRateTracker.collateralToTokenValue(balanceBuffer.committedBalanceOf(user, openDrawId));
+    (uint256 balance, uint256 drawId) = scheduledBalances[user].consolidatedBalanceInfo(openDrawId);
+    uint256 tokens = exchangeRateTracker.collateralToTokenValue(balance, drawId);
     if (tokens > 0) {
-      balanceBuffer.clearCommitted(user, openDrawId);
+      scheduledBalances[user].clearConsolidated(openDrawId);
       _send(address(this), address(this), user, tokens, "", "", true);
     }
   }

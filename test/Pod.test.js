@@ -95,7 +95,7 @@ contract('Pod', (accounts) => {
   }
 
   describe('initialize()', () => {
-    xit('should initialize the contract properly', async () => {
+    it('should initialize the contract properly', async () => {
       assert.equal(await pod.pool(), pool.address)
       assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('ERC777TokensRecipient')), pod.address)
       assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('PoolTogetherRewardListener')), pod.address)
@@ -103,13 +103,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('currentExchangeRateMantissa()', () => {
-    xit('should default to one million', async () => {
+    it('should default to one million', async () => {
       assert.equal(await pod.currentExchangeRateMantissa(), toWei('1000000'))
     })
   })
 
   describe('tokensReceived()', () => {
-    xit('should accept pool tokens', async () => {
+    it('should accept pool tokens', async () => {
       const amount = toWei('10')
 
       await depositDrawTransfer(amount, user1)
@@ -121,7 +121,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pool.committedBalanceOf(pod.address), amount)
     })
 
-    xit('should mint everyone the same number', async () => {
+    it('should mint everyone the same number', async () => {
       const amount = toWei('10')
 
       // deposit into pool
@@ -143,7 +143,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOf(user2), tenMillion)
     })
 
-    xit('should calculate the exchange rate when there are winnings', async () => {
+    it('should calculate the exchange rate when there are winnings', async () => {
       const amount = toWei('10')
 
       // deposit, commit and transfer
@@ -177,7 +177,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('deposit()', () => {
-    xit('should allow a user to deposit into the pod', async () => {
+    it('should allow a user to deposit into the pod', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, { from: user1 })
@@ -185,7 +185,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOf(user1), '0')
     })
 
-    xit('should convert their deposit to tickets on next draw', async () => {
+    it('should convert their deposit to tickets on next draw', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, { from: user1 })
@@ -194,7 +194,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOfUnderlying(user1), amount)
     })
 
-    xit('should reward only those who are committed', async () => {
+    it('should reward only those who are committed', async () => {
       const amount = toWei('10')
 
       // first deposit
@@ -224,7 +224,7 @@ contract('Pod', (accounts) => {
       assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('10'))
     })
 
-    xit('should retain a history of exchange rates for old deposits', async () => {
+    it('should retain a history of exchange rates for old deposits', async () => {
       const amount = toWei('10')
 
       // first deposit
@@ -233,38 +233,36 @@ contract('Pod', (accounts) => {
       // commit
       await podContext.nextDraw()
 
-      // reward
-      await podContext.nextDraw({ prize: toWei('2') })
+      assert.equal((await pod.totalSupply()).toString(), tenMillion)
+      assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('10'))
+
+      // second deposit, should split remaining winnings evenly
+      await depositPod(toWei('12'), { from: user2 })
 
       // reward
       await podContext.nextDraw({ prize: toWei('2') })
+
+      assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('12'))
+      assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('12'))
+
+      // reward
+      await podContext.nextDraw({ prize: toWei('2') })
+
+      // assert.equal((await pod.totalSupply()).toString(), tenMillion)
+      assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('13'))
+      assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('13'))
 
       // reward
       await podContext.nextDraw({ prize: toWei('2') })
       
-      // first user should have all prizes, even though it hasn't been consolidated for ages
-      assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('16'))
-    })
-
-    it('should test improper consolidation', async () => {
-      throw 'failed'
-
-      // user 1 deposits
-
-      // reward 1 occurs
-
-      // user 2 deposits
-
-      // reward 2 occurs
-
-      // reward 3 occurs
-
-      // user 1 deposits again
+      // assert.equal((await pod.totalSupply()).toString(), tenMillion)
+      assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('14'))
+      assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('14'))
     })
   })
 
   describe('redeem', () => {
-    xit('should allow a user to redeem all of their tokens', async () => {
+    it('should allow a user to redeem all of their tokens', async () => {
       const amount = toWei('10')
       // deposit, reward, and transfer.
       await depositDrawTransfer(amount, user1)
@@ -282,7 +280,7 @@ contract('Pod', (accounts) => {
       assert.equal((await pod.balanceOf(user1)).toString(), '0')
     })
 
-    xit('should allow a user to redeem zero tokens', async () => {
+    it('should allow a user to redeem zero tokens', async () => {
       // Ensure committed draw
       await podContext.nextDraw()
 
@@ -294,7 +292,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorRedeem', () => {
-    xit('should fail if the user is not an operator', async () => {
+    it('should fail if the user is not an operator', async () => {
       const amount = toWei('10')
       // deposit, reward, and transfer.
       await depositDrawTransfer(amount, user1)
@@ -302,7 +300,7 @@ contract('Pod', (accounts) => {
       await chai.assert.isRejected(pod.operatorRedeem(user1, await pod.balanceOf(user1), [], [], { from: user2 }), /Pod\/not-op/)
     })
 
-    xit('should allow an operator to redeem on behalf of a user', async () => {
+    it('should allow an operator to redeem on behalf of a user', async () => {
       const amount = toWei('10')
       // deposit, reward, and transfer.
       await depositDrawTransfer(amount, user1)
@@ -320,13 +318,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('redeemToPool()', () => {
-    xit('should not allow a user to transfer unless they have tokens', async () => {
+    it('should not allow a user to transfer unless they have tokens', async () => {
       const amount = toWei('10')
       await depositPod(amount, { from: user1 })
       await chai.assert.isRejected(pod.redeemToPool('1', { from: user1 }))
     })
 
-    xit('should allow a user to transfer', async () => {
+    it('should allow a user to transfer', async () => {
       const amount = toWei('10')
       await depositPod(amount, { from: user1 })
 
@@ -340,7 +338,7 @@ contract('Pod', (accounts) => {
       assert.equal((await pool.committedBalanceOf(user1)).toString(), amount)
     })
 
-    xit('should allow a user to partially transfer', async () => {
+    it('should allow a user to partially transfer', async () => {
 
       const amount = toWei('10')
 
@@ -366,13 +364,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorBurn()', () => {
-    xit('should revert', async () => {
+    it('should revert', async () => {
       await chai.assert.isRejected(pod.operatorBurn(user1, toWei('10'), [], []), /Pod\/no-op/)
     })
   })
 
   describe('burn()', () => {
-    xit('should revert', async () => {
+    it('should revert', async () => {
       await chai.assert.isRejected(pod.burn(toWei('10'), []), /Pod\/no-op/)
     })
   })
