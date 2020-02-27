@@ -91,7 +91,7 @@ contract('Pod', (accounts) => {
 
   async function depositPod(amount, options) {
     await token.approve(pod.address, amount, options)
-    await pod.deposit(amount, options)
+    await pod.deposit(amount, [], options)
   }
 
   describe('initialize()', () => {
@@ -180,7 +180,7 @@ contract('Pod', (accounts) => {
     it('should allow a user to deposit into the pod', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
-      await pod.deposit(amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
       assert.equal(await pod.pendingDeposit(user1), amount)
       assert.equal(await pod.balanceOf(user1), '0')
     })
@@ -188,7 +188,7 @@ contract('Pod', (accounts) => {
     it('should convert their deposit to tickets on next draw', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
-      await pod.deposit(amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
       await podContext.nextDraw({ prize: toWei('2') })
       assert.equal(await pod.pendingDeposit(user1), '0')
       assert.equal(await pod.balanceOfUnderlying(user1), amount)
@@ -199,7 +199,7 @@ contract('Pod', (accounts) => {
 
       // first deposit
       await token.approve(pod.address, amount, { from: user1 })
-      await pod.deposit(amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
 
       assert.equal((await pod.balanceOf(user1)).toString(), '0')
       
@@ -210,7 +210,7 @@ contract('Pod', (accounts) => {
       
       // second user deposit is open at time of reward
       await token.approve(pod.address, amount, { from: user2 })
-      await pod.deposit(amount, { from: user2 })
+      await pod.deposit(amount, [], { from: user2 })
 
       // reward
       await podContext.nextDraw({ prize: toWei('2') })

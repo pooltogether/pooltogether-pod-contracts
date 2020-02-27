@@ -18,11 +18,11 @@ contract('DrawExchangeRates', () => {
     await chai.assert.isRejected(exchangeRates.search(0), /ExchangeRateTracker\/empty/)
   })
 
-  it('should pick the last when doubles exist', async () => {
-    await exchangeRates.setExchangeRateTracker([1, 1, 2, 2, 3, 3])
+  it('should pick the last when duplicates exist', async () => {
+    await exchangeRates.setExchangeRateTracker([1, 1, 2, 2, 2, 3, 3])
     chai.assert.equal(await exchangeRates.search(1), 1)
-    chai.assert.equal(await exchangeRates.search(2), 3)
-    chai.assert.equal(await exchangeRates.search(3), 5)
+    chai.assert.equal(await exchangeRates.search(2), 4)
+    chai.assert.equal(await exchangeRates.search(3), 6)
   })
 
   it('should not accept draw ids smaller than smallest', async () => {
