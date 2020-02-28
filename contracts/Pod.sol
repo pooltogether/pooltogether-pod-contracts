@@ -35,6 +35,15 @@ import "./ExchangeRateTracker.sol";
  * @title PoolTogether Pod
  * @author Brendan Asselstine
  * @notice Allows users to own shares in pooled tickets for a PoolTogether Pool
+ *
+ * Designed to be bound to the PoolTogether Pool that support RewardListeners.
+ *
+ * A RewardListener is a contract that is registered to be the reward listener for an address using the ERC 1820 registry.
+ *
+ * When the Pool picks a winner, the Pool will look for a registered RewardListener.  If one exists, it calls `rewarded`
+ * on the listener with a stipend of 200000 gas.
+ *
+ * In this way the Pod is able to track historic exchange rates.
  */
 contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   using ScheduledBalance for ScheduledBalance.State;
