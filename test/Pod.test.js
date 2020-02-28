@@ -1,6 +1,7 @@
 const toWei = require('./helpers/toWei')
 const chai = require('./helpers/chai')
 const PoolContext = require('./helpers/PoolContext')
+const Token = artifacts.require('Token.sol')
 const Pod = artifacts.require('Pod.sol')
 const PodContext = require('./helpers/PodContext')
 const BN = require('bn.js')
@@ -68,17 +69,6 @@ contract('Pod', (accounts) => {
     // commit and mint tickets
     await podContext.nextDraw({ prize })
 
-    // console.log({ prize, committedDrawId })
-
-    // let totalSupply = (await pod.totalSupply()).toString()
-    // let committedSupply = (await pool.committedSupply()).toString()
-    // let pendingCollateralSupply = (await pod.pendingCollateralSupply()).toString()
-
-    // console.log({ totalSupply, committedSupply, pendingCollateralSupply })
-
-    // await pod.rewarded(user, prize, openDrawId)
-
-    // transfer into pod
     const { logs } = await poolToken.transfer(pod.address, amount, { from: user })
 
     const Minted = logs.slice().reverse().find((value => value.event === 'Minted'))
@@ -94,7 +84,20 @@ contract('Pod', (accounts) => {
     await pod.deposit(amount, [], options)
   }
 
+  describe('tokensReceived()', () => {
+    it('should not accept from strange tokens', async () => {
+      let token = await poolContext.new777Token()
+
+      await chai.assert.isRejected(token.send(pod.address, toWei('100'), []), /Pod\/unknown-token/)
+    })
+  })
+
   describe('initialize()', () => {
+    it('should not allow null pool', async () => {
+      let pod = await podContext.createPodNoInit()
+      await chai.assert.isRejected(pod.initialize(ZERO_ADDRESS), /Pod\/pool-def/)
+    })
+
     it('should initialize the contract properly', async () => {
       assert.equal(await pod.pool(), pool.address)
       assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('ERC777TokensRecipient')), pod.address)
@@ -173,6 +176,22 @@ contract('Pod', (accounts) => {
       assert.equal((await pod.balanceOfUnderlying(user2)).toString(), '10909090909090909090')
       assert.equal((await pod.balanceOfUnderlying(user3)).toString(), toWei('10'))
       assert.equal((await pool.committedBalanceOf(pod.address)), toWei('34'))
+    })
+  })
+
+  describe('operatorDeposit()', () => {
+    it('should allow an operator to deposit on behalf of a user', async () => {
+      const amount = toWei('10')
+      await token.approve(pod.address, amount, { from: user2 })
+      await pod.operatorDeposit(user1, amount, [], [], { from: user2 })
+      assert.equal(await pod.pendingDeposit(user1), amount)
+      assert.equal(await pod.balanceOf(user1), '0')
+    })
+  })
+
+  describe('rewarded()', () => {
+    it('can only be called by the pool', async () => {
+      chai.assert.isRejected(pod.rewarded(user1, toWei('10'), '1'), /Pod\/only-pool/)
     })
   })
 
@@ -315,6 +334,27 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorRedeemToPool()', () => {
+    it('should allow an operator to transfer', async () => {
+
+      const amount = toWei('10')
+      await depositPod(amount, { from: user1 })
+
+      // now commit
+      await podContext.nextDraw()
+
+      const balance = await pod.balanceOf(user1)
+
+      // non operators can't
+      await chai.assert.isRejected(pod.operatorRedeemToPool(user1, balance, [], []), /Pod\/not-op/)
+
+      await pod.authorizeOperator(user2, { from: user1 })
+
+      // redeem to pool
+      await pod.operatorRedeemToPool(user1, balance, [], [], { from: user2 })
+
+      assert.equal((await pod.balanceOf(user1)).toString(), '0')
+      assert.equal((await pool.committedBalanceOf(user1)).toString(), amount)
+    })
   })
 
   describe('redeemToPool()', () => {

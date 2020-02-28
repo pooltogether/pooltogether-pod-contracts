@@ -3,27 +3,26 @@ module.exports = function PodContext({ artifacts, poolContext }) {
   const Pod = artifacts.require('Pod.sol')
   const FixedPoint = artifacts.require('FixedPoint.sol')
   const ExchangeRateTracker = artifacts.require('ExchangeRateTracker.sol')
-  const SupplyBuffer = artifacts.require('SupplyBuffer.sol')
-  const BalanceBuffer = artifacts.require('BalanceBuffer.sol')
+  const ScheduledBalance = artifacts.require('ScheduledBalance.sol')
 
-  let pod, fixedPoint, exchangeRateTracker, supplyBuffer, balanceBuffer
+  let pod, fixedPoint, exchangeRateTracker, scheduledBalance
 
-  this.createPod = async () => {
+  this.createPodNoInit = async () => {
     fixedPoint = await FixedPoint.new()
     exchangeRateTracker = await ExchangeRateTracker.new()
-    supplyBuffer = await SupplyBuffer.new()
-    balanceBuffer = await BalanceBuffer.new()
+    scheduledBalance = await ScheduledBalance.new()
     Pod.link('FixedPoint', fixedPoint.address)
     Pod.link('ExchangeRateTracker', exchangeRateTracker.address)
-    Pod.link('SupplyBuffer', supplyBuffer.address)
-    Pod.link('BalanceBuffer', balanceBuffer.address)
-    
-    pod = await Pod.new()
+    Pod.link('ScheduledBalance', scheduledBalance.address)
+    let pod = await Pod.new()
+    return pod
+  }
 
+  this.createPod = async () => {
+    pod = await this.createPodNoInit()
     await pod.initialize(
       poolContext.pool.address
     )
-
     return pod
   }
 

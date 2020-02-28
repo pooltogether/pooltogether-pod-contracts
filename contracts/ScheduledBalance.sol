@@ -120,8 +120,7 @@ library ScheduledBalance {
   function consolidatedBalanceInfo(
     State storage self,
     uint256 currentTimestamp
-  ) internal view returns (uint256 balance, uint256 timeslot) {
-    require(currentTimestamp >= self.lastTimestamp, "ScheduledBalance/backwards");
+  ) internal view notBackwards(self, currentTimestamp) returns (uint256 balance, uint256 timeslot) {
     balance = self.previousBalance;
     timeslot = self.previousTimestamp;
     if (self.lastTimestamp < currentTimestamp) {
@@ -139,8 +138,10 @@ library ScheduledBalance {
    * @param self The State struct
    * @param currentTimestamp The current time
    */
-  function unconsolidatedBalance(State storage self, uint256 currentTimestamp) internal view returns (uint256) {
-    require(currentTimestamp >= self.lastTimestamp, "ScheduledBalance/backwards");
+  function unconsolidatedBalance(
+    State storage self,
+    uint256 currentTimestamp
+  ) internal view notBackwards(self, currentTimestamp) returns (uint256) {
     uint256 result;
     if (currentTimestamp == self.lastTimestamp) {
       result = result.add(self.lastBalance);
@@ -156,13 +157,17 @@ library ScheduledBalance {
    * @param self The State struct
    * @param currentTimestamp The current time
    */
-  function clearConsolidated(State storage self, uint256 currentTimestamp) internal returns (uint256) {
-    require(currentTimestamp >= self.lastTimestamp, "ScheduledBalance/backwards");
+  function clearConsolidated(State storage self, uint256 currentTimestamp) internal notBackwards(self, currentTimestamp) returns (uint256) {
     if (self.lastTimestamp < currentTimestamp) {
       delete self.lastTimestamp;
       delete self.lastBalance;
     }
     delete self.previousBalance;
     delete self.previousTimestamp;
+  }
+
+  modifier notBackwards(State storage self, uint256 currentTimestamp) {
+    require(currentTimestamp >= self.lastTimestamp, "ScheduledBalance/backwards");
+    _;
   }
 }

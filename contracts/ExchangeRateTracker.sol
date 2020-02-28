@@ -50,6 +50,7 @@ library ExchangeRateTracker {
    * @param baseExchangeRateMantissa The starting exchange rate for the token
    */
   function initialize(State storage self, uint256 baseExchangeRateMantissa) internal {
+    require(baseExchangeRateMantissa > 0, "ExchangeRateTracker/non-zero");
     self.exchangeRates.length = 0;
     self.exchangeRates.push(ExchangeRate(0, FixedPoint.Fixed18(baseExchangeRateMantissa)));
   }
@@ -66,7 +67,13 @@ library ExchangeRateTracker {
    * @param timestamp The time at which the change occurred
    * @return The new exchange rate mantissa
    */
-  function collateralizationChanged(State storage self, uint256 tokens, uint256 collateral, uint256 timestamp) internal returns (uint256) {
+  function collateralizationChanged(
+    State storage self,
+    uint256 tokens,
+    uint256 collateral,
+    uint256 timestamp
+  ) internal returns (uint256) {
+    wasInitialized(self);
     require(self.exchangeRates[self.exchangeRates.length - 1].timestamp <= timestamp, "ExchangeRateTracker/too-early");
     FixedPoint.Fixed18 memory rate = FixedPoint.Fixed18(FixedPoint.calculateMantissa(tokens, collateral));
     self.exchangeRates.push(ExchangeRate(timestamp, rate));
@@ -103,7 +110,7 @@ library ExchangeRateTracker {
    * @param timestamp The timestamp of the rate to use for conversion
    * @return The collateral value of the given tokens at the given timestamp
    */
-  function tokenToCollateralValue(State storage self, uint256 tokens, uint256 timestamp) internal view returns (uint256) {
+  function tokenToCollateralValueAt(State storage self, uint256 tokens, uint256 timestamp) internal view returns (uint256) {
     uint256 exchangeRateIndex = search(self, timestamp);
     return FixedPoint.divideUintByFixed(tokens, self.exchangeRates[exchangeRateIndex].exchangeRate);
   }
@@ -116,7 +123,7 @@ library ExchangeRateTracker {
    * @param timestamp The timestamp of the rate to use for conversion
    * @return The token value of the given collateral at the given timestamp
    */
-  function collateralToTokenValue(State storage self, uint256 collateral, uint256 timestamp) internal view returns (uint256) {
+  function collateralToTokenValueAt(State storage self, uint256 collateral, uint256 timestamp) internal view returns (uint256) {
     uint256 exchangeRateIndex = search(self, timestamp);
     return FixedPoint.multiplyUint(self.exchangeRates[exchangeRateIndex].exchangeRate, collateral);
   }
@@ -130,6 +137,7 @@ library ExchangeRateTracker {
    * @return The current exchange rate mantissa
    */
   function currentExchangeRateMantissa(State storage self) internal view returns (uint256) {
+     wasInitialized(self);
     return self.exchangeRates[self.exchangeRates.length - 1].exchangeRate.mantissa;
   }
 
@@ -140,6 +148,7 @@ library ExchangeRateTracker {
    * @return The current exchange rate as a FixedPoint.Fixed18 struct
    */
   function currentExchangeRate(State storage self) internal view returns (FixedPoint.Fixed18 storage) {
+    wasInitialized(self);
     return self.exchangeRates[self.exchangeRates.length - 1].exchangeRate;
   }
 
@@ -153,8 +162,7 @@ library ExchangeRateTracker {
    * @return The index of the exchange rate that was in effect at the given timestamp
    */
   function search(State storage self, uint256 timestamp) internal view returns (uint256) {
-    require(self.exchangeRates.length > 0, "ExchangeRateTracker/empty");
-    require(timestamp >= self.exchangeRates[0].timestamp, "ExchangeRateTracker/bounds");
+    wasInitialized(self);
 
     uint256 lowerBound = 0;
     uint256 upperBound = self.exchangeRates.length;
@@ -170,5 +178,9 @@ library ExchangeRateTracker {
     }
 
     return upperBound - 1;
+  }
+
+  function wasInitialized(State storage self) internal view {
+    require(self.exchangeRates.length > 0, "ExchangeRateTracker/not-init");
   }
 }

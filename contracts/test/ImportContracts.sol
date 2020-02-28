@@ -20,6 +20,7 @@ pragma solidity ^0.5.0;
 
 import "@pooltogether/pooltogether-contracts/contracts/test/Token.sol";
 import "@pooltogether/pooltogether-contracts/contracts/test/CErc20Mock.sol";
+import "@pooltogether/pooltogether-contracts/contracts/test/ERC777Mintable.sol";
 import "@pooltogether/pooltogether-contracts/contracts/RecipientWhitelistPoolToken.sol";
 
 /**
@@ -27,5 +28,7 @@ import "@pooltogether/pooltogether-contracts/contracts/RecipientWhitelistPoolTok
  */
 
 contract ImportContracts2 is RecipientWhitelistPoolToken {}
+
+contract Import777 is ERC777Mintable {}
 
 contract ImportContracts is Token, CErc20Mock {}

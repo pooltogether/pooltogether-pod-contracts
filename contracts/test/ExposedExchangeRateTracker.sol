@@ -26,18 +26,43 @@ contract ExposedExchangeRateTracker {
 
   ExchangeRateTracker.State state;
 
-  function search(uint256 drawId) external view returns (uint256) {
-    return state.search(drawId);
-  }
-
-  function setExchangeRateTracker(uint256[] calldata drawIds) external {
-    state.exchangeRates.length = 0;
-    for (uint256 i = 0; i < drawIds.length; i++) {
-      state.exchangeRates.push(ExchangeRateTracker.ExchangeRate(drawIds[i], FixedPoint.Fixed18(0)));
-    }
+  function length() external view returns (uint256) {
+    return state.exchangeRates.length;
   }
 
   function get(uint256 index) external view returns (uint256) {
     return state.exchangeRates[index].timestamp;
+  }
+
+  function initialize(uint256 baseExchangeRateMantissa) external {
+    state.initialize(baseExchangeRateMantissa);
+  }
+
+  function collateralizationChanged(uint256 tokens, uint256 collateral, uint256 timestamp) external returns (uint256) {
+    state.collateralizationChanged(tokens, collateral, timestamp);
+  }
+
+  function tokenToCollateralValue(uint256 tokens) external view returns (uint256) {
+    return state.tokenToCollateralValue(tokens);
+  }
+
+  function collateralToTokenValue(uint256 collateral) external view returns (uint256) {
+    return state.collateralToTokenValue(collateral);
+  }
+
+  function tokenToCollateralValueAt(uint256 tokens, uint256 timestamp) external view returns (uint256) {
+    return state.tokenToCollateralValueAt(tokens, timestamp);
+  }
+
+  function collateralToTokenValueAt(uint256 collateral, uint256 timestamp) external view returns (uint256) {
+    return state.collateralToTokenValueAt(collateral, timestamp);
+  }
+
+  function currentExchangeRateMantissa() external view returns (uint256) {
+    return state.currentExchangeRateMantissa();
+  }
+
+  function search(uint256 drawId) external view returns (uint256) {
+    return state.search(drawId);
   }
 }

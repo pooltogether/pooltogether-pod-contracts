@@ -76,6 +76,11 @@ contract('ScheduledBalance', (accounts) => {
   })
 
   describe('clearConsolidated()', () => {
+    it('should require a timestamp no earlier than the last', async () => {
+      await scheduledBalance.deposit('2', '1')
+      await chai.assert.isRejected(scheduledBalance.clearConsolidated('0'), /ScheduledBalance\/backwards/)
+    })
+
     it('should erase all committed amounts', async () => {
       await scheduledBalance.deposit('2', '1')
       await scheduledBalance.deposit('3', '2')
