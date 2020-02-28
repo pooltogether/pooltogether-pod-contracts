@@ -2,7 +2,11 @@
 
 Pods allow users to pool their tickets together in PoolTogether.  They can exchange their tickets for Pod shares.
 
-# Setup
+If you'd like to deploy Pods and a mock Pool so you can play with them try the [PoolTogether Mock](https://github.com/pooltogether/pooltogether-contracts-mock).
+
+# Development
+
+## Setup
 
 Clone the repo and then install deps:
 
@@ -17,22 +21,18 @@ $ cp .envrc.example .envrc
 $ direnv allow
 ```
 
-Start the local Ethereum node using `ganache-cli`:
+## Tests
+
+Run tests:
 
 ```
-$ yarn start
+$ yarn test
 ```
 
-Now deploy the contracts locally:
+## Coverage 
+
+Run coverage:
 
 ```
-$ yarn migrate
+$ yarn coverage
 ```
-
-To destroy your local deployment, run:
-
-```
-$ yarn reset
-```
-
-*Note: If you changed the mnemonic, you should update the ADMIN_ADDRESS variable in `.envrc` with another address (I use the second address listed when `ganache-cli` starts).*
