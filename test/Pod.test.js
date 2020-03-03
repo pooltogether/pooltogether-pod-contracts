@@ -195,11 +195,104 @@ contract('Pod', (accounts) => {
     })
   })
 
+  describe('withdrawPendingDeposit', () => {
+    it('should transfer the tokens back', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      const tokenBalanceBefore = await token.balanceOf(user1)
+      const { logs } = await pod.withdrawPendingDeposit(amount, [], { from: user1 })
+
+      const PendingDepositWithdrawn = logs.find(log => log.event === 'PendingDepositWithdrawn')
+      chai.assert.isDefined(PendingDepositWithdrawn)
+      assert.equal(PendingDepositWithdrawn.args.operator, user1)
+      assert.equal(PendingDepositWithdrawn.args.from, user1)
+      assert.equal(PendingDepositWithdrawn.args.collateral, amount.toString())
+
+      const tokenBalanceAfter = await token.balanceOf(user1)
+  
+      assert.equal(tokenBalanceBefore.add(amount).toString(), tokenBalanceAfter.toString())
+
+      assert.equal(await pod.pendingDeposit(user1), '0')
+      assert.equal(await pod.balanceOf(user1), '0')
+
+      assert.equal(await pool.committedBalanceOf(pod.address), '0')
+      assert.equal(await pool.openBalanceOf(pod.address), '0')
+    })
+
+    it('should reject when insufficient funds', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      const tooMuch = web3.utils.toBN(toWei('11'))
+      await chai.assert.isRejected(pod.withdrawPendingDeposit(tooMuch, [], { from: user1 }), /ScheduledBalance\/insuff/)
+    })
+
+    it('should support partial withdrawals', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      const tokenBalanceBefore = await token.balanceOf(user1)
+      const lesserAmount = web3.utils.toBN(toWei('4'))
+      const { logs } = await pod.withdrawPendingDeposit(lesserAmount, [], { from: user1 })
+
+      const PendingDepositWithdrawn = logs.find(log => log.event === 'PendingDepositWithdrawn')
+      chai.assert.isDefined(PendingDepositWithdrawn)
+      assert.equal(PendingDepositWithdrawn.args.operator, user1)
+      assert.equal(PendingDepositWithdrawn.args.from, user1)
+      assert.equal(PendingDepositWithdrawn.args.collateral, lesserAmount.toString())
+
+      const tokenBalanceAfter = await token.balanceOf(user1)
+  
+      assert.equal(tokenBalanceBefore.add(lesserAmount).toString(), tokenBalanceAfter.toString())
+
+      assert.equal(await pod.pendingDeposit(user1), toWei('6'))
+      assert.equal(await pod.balanceOf(user1), '0')
+      assert.equal(await pool.committedBalanceOf(pod.address), '0')
+      assert.equal(await pool.openBalanceOf(pod.address), toWei('6'))
+    })
+  })
+
+  describe('operatorWithdrawPendingDeposit', () => {
+    it('should disallow non-operators', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+      await chai.assert.isRejected(pod.operatorWithdrawPendingDeposit(user1, amount, [], [], { from: user2 }), /Pod\/not-op/)
+    })
+
+    it('should allow operators', async () => {
+      await pod.authorizeOperator(user2, { from: user1 })
+      const amount = web3.utils.toBN(toWei('10'))
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+      const { logs } = await pod.operatorWithdrawPendingDeposit(user1, amount, [], [], { from: user2 })
+
+      const PendingDepositWithdrawn = logs.find(log => log.event === 'PendingDepositWithdrawn')
+      chai.assert.isDefined(PendingDepositWithdrawn)
+      assert.equal(PendingDepositWithdrawn.args.operator, user2)
+
+      assert.equal(await pod.pendingDeposit(user1), toWei('0'))
+      assert.equal(await pool.openBalanceOf(pod.address), toWei('0'))
+    })
+  })
+
   describe('deposit()', () => {
     it('should allow a user to deposit into the pod', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
-      await pod.deposit(amount, [], { from: user1 })
+      const { logs } = await pod.deposit(amount, [], { from: user1 })
+
+      let deposited = logs.find(log => log.event === 'Deposited')
+      chai.assert.isDefined(deposited)
+      assert.equal(deposited.args.operator, user1)
+      assert.equal(deposited.args.from, user1)
+      assert.equal(deposited.args.collateral, amount)
+      assert.equal(deposited.args.drawId, '1')
+
       assert.equal(await pod.pendingDeposit(user1), amount)
       assert.equal(await pod.balanceOf(user1), '0')
     })

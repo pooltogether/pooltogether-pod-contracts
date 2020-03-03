@@ -64,6 +64,16 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   IERC1820Registry constant internal ERC1820_REGISTRY = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
   /**
+   * @notice Event emitted when a user withdraws their pending deposit
+   * @param operator The operator who kicked off the transaction
+   * @param from The account that is being debited
+   * @param collateral The amount of collateral being withdrawn
+   * @param data Data the debited account included in the tx
+   * @param operatorData Data the operator included in the tx
+   */
+  event PendingDepositWithdrawn(address indexed operator, address indexed from, uint256 collateral, bytes data, bytes operatorData);
+
+  /**
    * @notice Event emitted when a user or operator redeems tokens into the backing collateral
    * @param operator The operator who kicked off the transaction
    * @param from The account that is being debited
@@ -133,7 +143,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
 
   /**
    * @notice Deposits on behalf of a user by an operator.  The deposit will become Pod shares upon the next Pool reward.
-   * @param user The user on whose half to deposit
+   * @param user The user on whose behalf to deposit
    * @param amount The amount of collateral to deposit
    * @param data Included user data
    * @param operatorData Included operator data
@@ -173,7 +183,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     uint256 openDrawId = pool.currentOpenDrawId();
     scheduledSupply.deposit(amount, openDrawId);
     scheduledBalances[from].deposit(amount, openDrawId);
-    emit Deposited(operator, operator, amount, openDrawId, data, operatorData);
+    emit Deposited(operator, from, amount, openDrawId, data, operatorData);
   }
 
   /**
@@ -232,6 +242,58 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    */
   function pendingDeposit(address user) public view returns (uint256) {
     return scheduledBalances[user].unconsolidatedBalance(pool.currentOpenDrawId());
+  }
+
+  /**
+   * @notice Allows an operator to withdraw a user's pending deposit on their behalf
+   * @param from The user on whose behalf to withdraw
+   * @param amount The amount to withdraw
+   * @param data Data included by the user
+   * @param operatorData Data included by the operator
+   */
+  function operatorWithdrawPendingDeposit(
+    address from,
+    uint256 amount,
+    bytes calldata data,
+    bytes calldata operatorData
+  ) external {
+    require(isOperatorFor(msg.sender, from), "Pod/not-op");
+    _withdrawPendingDeposit(msg.sender, from, amount, data, operatorData);
+  }
+
+  /**
+   * @notice Allows a user to withdraw their pending deposit
+   * @param amount The amount the user wishes to withdraw
+   * @param data Data included by the user
+   */
+  function withdrawPendingDeposit(
+    uint256 amount,
+    bytes calldata data
+  ) external {
+    _withdrawPendingDeposit(msg.sender, msg.sender, amount, data, "");
+  }
+
+  /**
+   * @notice Withdraw from a user's pending deposit
+   * @param operator The operator conducting the withdrawal
+   * @param from The user whose deposit will be withdrawn
+   * @param amount The amount to withdraw
+   * @param data Data included by the user
+   * @param operatorData Data included by the operator
+   */
+  function _withdrawPendingDeposit(
+    address operator,
+    address from,
+    uint256 amount,
+    bytes memory data,
+    bytes memory operatorData
+  ) internal {
+    uint256 openDrawId = pool.currentOpenDrawId();
+    scheduledBalances[from].withdrawUnconsolidated(amount, openDrawId);
+    pool.withdrawOpenDeposit(amount);
+    pool.token().transfer(from, amount);
+
+    emit PendingDepositWithdrawn(operator, from, amount, data, operatorData);
   }
 
   /**
