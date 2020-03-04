@@ -1,6 +1,6 @@
 {
   "name": "@pooltogether/pods",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "PoolTogether Pods: combine your tickets together for a better chance to win!",
   "main": "index.js",
   "homepage": "https://github.com/pooltogether/pods",
