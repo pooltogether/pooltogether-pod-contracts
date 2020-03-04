@@ -1,11 +1,11 @@
 {
   "contracts": {
     "Pod": {
-      "address": "0xbD930a33Ee079f5f27D646E4B110B389aa6810c3",
-      "constructorCode": "6080604052613812806100136000396000f3fe",
-      "bodyBytecodeHash": "ac3103887397ce94abc2a3ae9a0a88637653dc3427ae9c5c0e68d1d573fb3a16",
-      "localBytecodeHash": "18f59c202f42b0df30692ee9dcae94797c43de144a1819e411905f835a330133",
-      "deployedBytecodeHash": "18f59c202f42b0df30692ee9dcae94797c43de144a1819e411905f835a330133",
+      "address": "0x29fe7D60DdF151E5b52e5FAB4f1325da6b2bD958",
+      "constructorCode": "608060405261502f806100136000396000f3fe",
+      "bodyBytecodeHash": "144fda727e251dad34d53e9b93c525dcaad844088eb2fe281eaaad2779fa0cae",
+      "localBytecodeHash": "6ff30e805322b58e3aa8c4b0407c0fb548b540b4debf8f7844c18974862fd10e",
+      "deployedBytecodeHash": "9e7620faa9318d3340b52387c14aa86a4d1ebb25b63cfe1abf481ddd895ae3cc",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -53,79 +53,94 @@
           "label": "mapping(key => bool)",
           "kind": "mapping"
         },
-        "t_struct<SortitionSumTreeFactory.SortitionSumTrees>": {
-          "id": "t_struct<SortitionSumTreeFactory.SortitionSumTrees>",
+        "t_struct<ScheduledBalance.State>": {
+          "id": "t_struct<ScheduledBalance.State>",
           "kind": "struct",
-          "label": "SortitionSumTreeFactory.SortitionSumTrees",
+          "label": "ScheduledBalance.State",
           "members": [
             {
-              "label": "sortitionSumTrees",
-              "astId": 22,
-              "type": "t_mapping<t_struct<SortitionSumTreeFactory.SortitionSumTree>>",
-              "src": "1037:54:0"
-            }
-          ]
-        },
-        "t_struct<SortitionSumTreeFactory.SortitionSumTree>": {
-          "id": "t_struct<SortitionSumTreeFactory.SortitionSumTree>",
-          "kind": "struct",
-          "label": "SortitionSumTreeFactory.SortitionSumTree",
-          "members": [
-            {
-              "label": "K",
-              "astId": 3,
+              "label": "previousBalance",
+              "astId": 9758,
               "type": "t_uint256",
-              "src": "442:6:0"
+              "src": "1473:23:30"
             },
             {
-              "label": "stack",
-              "astId": 6,
-              "type": "t_array:dyn<t_uint256>",
-              "src": "690:12:0"
+              "label": "previousTimestamp",
+              "astId": 9760,
+              "type": "t_uint256",
+              "src": "1502:25:30"
             },
             {
-              "label": "nodes",
-              "astId": 9,
-              "type": "t_array:dyn<t_uint256>",
-              "src": "712:12:0"
+              "label": "lastBalance",
+              "astId": 9762,
+              "type": "t_uint256",
+              "src": "1533:19:30"
             },
             {
-              "label": "IDsToNodeIndexes",
-              "astId": 13,
-              "type": "t_mapping<t_uint256>",
-              "src": "878:41:0"
-            },
-            {
-              "label": "nodeIndexesToIDs",
-              "astId": 17,
-              "type": "t_mapping<t_bytes32>",
-              "src": "929:41:0"
+              "label": "lastTimestamp",
+              "astId": 9764,
+              "type": "t_uint256",
+              "src": "1558:21:30"
             }
           ]
         },
-        "t_array:dyn<t_uint256>": {
-          "id": "t_array:dyn<t_uint256>",
-          "valueType": "t_uint256",
+        "t_mapping<t_struct<ScheduledBalance.State>>": {
+          "id": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "valueType": "t_struct<ScheduledBalance.State>",
+          "label": "mapping(key => ScheduledBalance.State)",
+          "kind": "mapping"
+        },
+        "t_struct<ExchangeRateTracker.State>": {
+          "id": "t_struct<ExchangeRateTracker.State>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.State",
+          "members": [
+            {
+              "label": "exchangeRates",
+              "astId": 8367,
+              "type": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+              "src": "1234:28:27"
+            }
+          ]
+        },
+        "t_struct<ExchangeRateTracker.ExchangeRate>": {
+          "id": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.ExchangeRate",
+          "members": [
+            {
+              "label": "timestamp",
+              "astId": 8361,
+              "type": "t_uint256",
+              "src": "1030:17:27"
+            },
+            {
+              "label": "exchangeRate",
+              "astId": 8363,
+              "type": "t_struct<FixedPoint.Fixed18>",
+              "src": "1053:31:27"
+            }
+          ]
+        },
+        "t_struct<FixedPoint.Fixed18>": {
+          "id": "t_struct<FixedPoint.Fixed18>",
+          "kind": "struct",
+          "label": "FixedPoint.Fixed18",
+          "members": [
+            {
+              "label": "mantissa",
+              "astId": 8695,
+              "type": "t_uint256",
+              "src": "1232:16:28"
+            }
+          ]
+        },
+        "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>": {
+          "id": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+          "valueType": "t_struct<ExchangeRateTracker.ExchangeRate>",
           "length": "dyn",
           "kind": "array",
-          "label": "uint256[]"
-        },
-        "t_bytes32": {
-          "id": "t_bytes32",
-          "kind": "elementary",
-          "label": "bytes32"
-        },
-        "t_mapping<t_bytes32>": {
-          "id": "t_mapping<t_bytes32>",
-          "valueType": "t_bytes32",
-          "label": "mapping(key => bytes32)",
-          "kind": "mapping"
-        },
-        "t_mapping<t_struct<SortitionSumTreeFactory.SortitionSumTree>>": {
-          "id": "t_mapping<t_struct<SortitionSumTreeFactory.SortitionSumTree>>",
-          "valueType": "t_struct<SortitionSumTreeFactory.SortitionSumTree>",
-          "label": "mapping(key => SortitionSumTreeFactory.SortitionSumTree)",
-          "kind": "mapping"
+          "label": "ExchangeRateTracker.ExchangeRate[]"
         }
       },
       "storage": [
@@ -133,7 +148,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "initialized",
-          "astId": 3030,
+          "astId": 2993,
           "type": "t_bool",
           "src": "757:24:14"
         },
@@ -141,7 +156,7 @@
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "initializing",
-          "astId": 3032,
+          "astId": 2995,
           "type": "t_bool",
           "src": "876:25:14"
         },
@@ -149,9 +164,9 @@
           "contract": "Initializable",
           "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
           "label": "______gap",
-          "astId": 3088,
+          "astId": 3057,
           "type": "t_array:50<t_uint256>",
-          "src": "1951:29:14"
+          "src": "1982:29:14"
         },
         {
           "contract": "ERC777",
@@ -159,7 +174,7 @@
           "label": "_balances",
           "astId": 1733,
           "type": "t_mapping<t_uint256>",
-          "src": "1320:46:8"
+          "src": "1328:45:8"
         },
         {
           "contract": "ERC777",
@@ -167,7 +182,7 @@
           "label": "_totalSupply",
           "astId": 1735,
           "type": "t_uint256",
-          "src": "1373:29:8"
+          "src": "1380:28:8"
         },
         {
           "contract": "ERC777",
@@ -175,7 +190,7 @@
           "label": "_name",
           "astId": 1737,
           "type": "t_string",
-          "src": "1409:21:8"
+          "src": "1415:20:8"
         },
         {
           "contract": "ERC777",
@@ -183,7 +198,7 @@
           "label": "_symbol",
           "astId": 1739,
           "type": "t_string",
-          "src": "1436:23:8"
+          "src": "1441:22:8"
         },
         {
           "contract": "ERC777",
@@ -191,7 +206,7 @@
           "label": "_defaultOperatorsArray",
           "astId": 1748,
           "type": "t_array:dyn<t_address>",
-          "src": "2087:41:8"
+          "src": "2089:40:8"
         },
         {
           "contract": "ERC777",
@@ -199,7 +214,7 @@
           "label": "_defaultOperators",
           "astId": 1752,
           "type": "t_mapping<t_bool>",
-          "src": "2222:51:8"
+          "src": "2223:50:8"
         },
         {
           "contract": "ERC777",
@@ -207,7 +222,7 @@
           "label": "_operators",
           "astId": 1758,
           "type": "t_mapping<t_bool>",
-          "src": "2363:64:8"
+          "src": "2363:63:8"
         },
         {
           "contract": "ERC777",
@@ -215,7 +230,7 @@
           "label": "_revokedDefaultOperators",
           "astId": 1764,
           "type": "t_mapping<t_bool>",
-          "src": "2433:78:8"
+          "src": "2432:77:8"
         },
         {
           "contract": "ERC777",
@@ -223,31 +238,63 @@
           "label": "_allowances",
           "astId": 1770,
           "type": "t_mapping<t_uint256>",
-          "src": "2542:70:8"
+          "src": "2540:69:8"
         },
         {
           "contract": "ERC777",
           "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
           "label": "______gap",
-          "astId": 2728,
+          "astId": 2691,
           "type": "t_array:50<t_uint256>",
-          "src": "16745:29:8"
+          "src": "16391:29:8"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "_guardCounter",
+          "astId": 2955,
+          "type": "t_uint256",
+          "src": "733:29:13"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "______gap",
+          "astId": 2988,
+          "type": "t_array:50<t_uint256>",
+          "src": "1563:29:13"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledSupply",
+          "astId": 8899,
+          "type": "t_struct<ScheduledBalance.State>",
+          "src": "5808:47:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledBalances",
+          "astId": 8903,
+          "type": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "src": "5945:69:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "exchangeRateTracker",
+          "astId": 8905,
+          "type": "t_struct<ExchangeRateTracker.State>",
+          "src": "6067:54:29"
         },
         {
           "contract": "Pod",
           "path": "contracts/Pod.sol",
           "label": "pool",
-          "astId": 8437,
+          "astId": 8907,
           "type": "t_address",
-          "src": "1591:24:26"
-        },
-        {
-          "contract": "Pod",
-          "path": "contracts/Pod.sol",
-          "label": "sumTrees",
-          "astId": 8439,
-          "type": "t_struct<SortitionSumTreeFactory.SortitionSumTrees>",
-          "src": "1619:50:26"
+          "src": "6188:24:29"
         }
       ],
       "warnings": {
@@ -259,14 +306,22 @@
       }
     }
   },
-  "solidityLibs": {},
+  "solidityLibs": {
+    "FixedPoint": {
+      "address": "0x88F48f21Be70c420386b4923a5b60Ba95E334d09",
+      "constructorCode": "610340610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe",
+      "bodyBytecodeHash": "e4127e06980b9be7d1bdef99f0a9081ad5f1e1060ff3ffe866cb010c780879ee",
+      "localBytecodeHash": "0bbd5c9321889cbdfc6d818730a8587f791701e255f35fcebfeeb63f7dd076f5",
+      "deployedBytecodeHash": "0bbd5c9321889cbdfc6d818730a8587f791701e255f35fcebfeeb63f7dd076f5"
+    }
+  },
   "proxies": {
     "pooltogether-pods/Pod": [
       {
-        "address": "0xfE6892654CBB05eB73d28DCc1Ff938f59666Fe9f",
+        "address": "0xB2E6e3D9Af235434385c28Bd31d98041A48226a6",
         "version": "0.2",
-        "implementation": "0xbD930a33Ee079f5f27D646E4B110B389aa6810c3",
-        "admin": "0x59dDF1901f38084eF22c6b810c3A8fb73cEEd0E6",
+        "implementation": "0x29fe7D60DdF151E5b52e5FAB4f1325da6b2bD958",
+        "admin": "0x49d716DFe60b37379010A75329ae09428f17118d",
         "kind": "Upgradeable"
       }
     ]
@@ -274,6 +329,6 @@
   "manifestVersion": "2.2",
   "version": "0.2",
   "proxyAdmin": {
-    "address": "0x59dDF1901f38084eF22c6b810c3A8fb73cEEd0E6"
+    "address": "0x49d716DFe60b37379010A75329ae09428f17118d"
   }
 }
