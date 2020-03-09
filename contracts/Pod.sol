@@ -289,6 +289,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     bytes memory operatorData
   ) internal {
     uint256 openDrawId = pool.currentOpenDrawId();
+    scheduledSupply.withdrawUnconsolidated(amount, openDrawId);
     scheduledBalances[from].withdrawUnconsolidated(amount, openDrawId);
     pool.withdrawOpenDeposit(amount);
     pool.token().transfer(from, amount);
