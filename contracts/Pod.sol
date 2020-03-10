@@ -77,7 +77,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @notice Event emitted when a user or operator redeems tokens into the backing collateral
    * @param operator The operator who kicked off the transaction
    * @param from The account that is being debited
-   * @param amount The amount of Pod shares burned
+   * @param amount The amount of Pod shares redeemed.
    * @param collateral The amount of collateral that was returned
    * @param data Data the debited account included in the tx
    * @param operatorData Data the operator included in the tx
@@ -88,7 +88,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @notice Event emitted when a user or operator redeems tokens into Pool tickets
    * @param operator The operator who kicked off the transaction
    * @param from The account that is being debited
-   * @param amount The amount of Pod shares burned
+   * @param amount The amount of Pod shares redeemed.
    * @param collateral The amount of Pool tickets redeemed.
    * @param data Data the debited account included in the tx
    * @param operatorData Data the operator included in the tx
@@ -110,7 +110,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @param from The account that will be credited with Pod shares
    * @param collateral The amount of collateral deposited
    * @param drawId The open draw id in which the account deposited
-   * @param data Data the debited account included in the tx
+   * @param data Data the credited account included in the tx
    * @param operatorData Data the operator included in the tx
    */
   event Deposited(address indexed operator, address indexed from, uint256 collateral, uint256 drawId, bytes data, bytes operatorData);

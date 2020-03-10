@@ -103,7 +103,7 @@ library ExchangeRateTracker {
   }
 
   /**
-   * Calculates the collateral value of the given token amount in the past.
+   * Calculates the collateral value of the given token amount at the specified timestamp.
    *
    * @param self The State struct
    * @param tokens The token amount
@@ -116,7 +116,7 @@ library ExchangeRateTracker {
   }
 
   /**
-   * Calculates the token value of the given collateral amount in the past.
+   * Calculates the token value of the given collateral amount at the specified timestamp.
    *
    * @param self The State struct
    * @param collateral The collateral amount
