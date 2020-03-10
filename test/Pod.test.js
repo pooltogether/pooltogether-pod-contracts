@@ -182,7 +182,7 @@ contract('Pod', (accounts) => {
   describe('operatorDeposit()', () => {
     it('should allow an operator to deposit on behalf of a user', async () => {
       const amount = toWei('10')
-      await token.approve(pod.address, amount, { from: user2 })
+      await token.approve(pod.address, amount, { from: user1 })
       await pod.operatorDeposit(user1, amount, [], [], { from: user2 })
       assert.equal(await pod.pendingDeposit(user1), amount)
       assert.equal(await pod.balanceOf(user1), '0')

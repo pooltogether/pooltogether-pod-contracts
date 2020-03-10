@@ -177,7 +177,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     bytes memory operatorData
   ) internal nonReentrant {
     consolidateBalanceOf(from);
-    pool.token().transferFrom(operator, address(this), amount);
+    pool.token().transferFrom(from, address(this), amount);
     pool.token().approve(address(pool), amount);
     pool.depositPool(amount);
     uint256 openDrawId = pool.currentOpenDrawId();
