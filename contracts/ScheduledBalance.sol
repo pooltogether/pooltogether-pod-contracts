@@ -157,7 +157,7 @@ library ScheduledBalance {
    * @param self The State struct
    * @param currentTimestamp The current time
    */
-  function clearConsolidated(State storage self, uint256 currentTimestamp) internal notBackwards(self, currentTimestamp) returns (uint256) {
+  function clearConsolidated(State storage self, uint256 currentTimestamp) internal notBackwards(self, currentTimestamp) {
     if (self.lastTimestamp < currentTimestamp) {
       delete self.lastTimestamp;
       delete self.lastBalance;
