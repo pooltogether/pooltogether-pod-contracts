@@ -221,21 +221,6 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   }
 
   /**
-   * @notice Returns the number of tokens held by the given user.  Does not include pending deposits.
-   * @param tokenHolder The user whose balance should be checked
-   * @return The users total balance of tokens.
-   */
-  function balanceOf(address tokenHolder) public view returns (uint256) {
-    (uint256 balance, uint256 drawId) = scheduledBalances[tokenHolder].consolidatedBalanceInfo(pool.currentOpenDrawId());
-    return super.balanceOf(tokenHolder).add(
-      exchangeRateTracker.collateralToTokenValueAt(
-        balance,
-        drawId
-      )
-    );
-  }
-
-  /**
    * @notice Returns the amount of collateral a user has deposited that is pending conversion to tokens.
    * @param user The user whose pending collateral balance should be returned.
    * @return The amount of collateral the user has deposited that has not converted to tokens.
@@ -297,6 +282,82 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     emit PendingDepositWithdrawn(operator, from, amount, data, operatorData);
   }
 
+  // =============================================== //
+  // ============== ERC777 Overrides =============== //
+  // =============================================== //
+
+  /**
+    * @dev Moves `amount` tokens from the caller's account to `recipient`.
+    *
+    * If send or receive hooks are registered for the caller and `recipient`,
+    * the corresponding functions will be called with `data` and empty
+    * `operatorData`. See {IERC777Sender} and {IERC777Recipient}.
+    *
+    * Emits a {Sent} event.
+    *
+    * Requirements
+    *
+    * - the caller must have at least `amount` tokens.
+    * - `recipient` cannot be the zero address.
+    * - if `recipient` is a contract, it must implement the {IERC777Recipient}
+    * interface.
+    */
+  function send(address recipient, uint256 amount, bytes memory data) public {
+    consolidateBalanceOf(msg.sender);
+    super.send(recipient, amount, data);
+  }
+
+  /**
+    * @dev Moves `amount` tokens from `sender` to `recipient`. The caller must
+    * be an operator of `sender`.
+    *
+    * If send or receive hooks are registered for `sender` and `recipient`,
+    * the corresponding functions will be called with `data` and
+    * `operatorData`. See {IERC777Sender} and {IERC777Recipient}.
+    *
+    * Emits a {Sent} event.
+    *
+    * Requirements
+    *
+    * - `sender` cannot be the zero address.
+    * - `sender` must have at least `amount` tokens.
+    * - the caller must be an operator for `sender`.
+    * - `recipient` cannot be the zero address.
+    * - if `recipient` is a contract, it must implement the {IERC777Recipient}
+    * interface.
+    */
+  function operatorSend(
+      address sender,
+      address recipient,
+      uint256 amount,
+      bytes memory data,
+      bytes memory operatorData
+  ) public {
+    consolidateBalanceOf(sender);
+    super.operatorSend(sender, recipient, amount, data, operatorData);
+  }
+
+  // ============= End ERC777 Overrides ============ //
+
+  // =============================================== //
+  // =============== ERC20 Overrides =============== //
+  // =============================================== //
+
+  /**
+   * @notice Returns the number of tokens held by the given user.  Does not include pending deposits.
+   * @param tokenHolder The user whose balance should be checked
+   * @return The users total balance of tokens.
+   */
+  function balanceOf(address tokenHolder) public view returns (uint256) {
+    (uint256 balance, uint256 drawId) = scheduledBalances[tokenHolder].consolidatedBalanceInfo(pool.currentOpenDrawId());
+    return super.balanceOf(tokenHolder).add(
+      exchangeRateTracker.collateralToTokenValueAt(
+        balance,
+        drawId
+      )
+    );
+  }
+
   /**
    * @notice Returns the total supply of tokens.  Does not included any pending deposits.
    * @return The total supply of tokens.
@@ -310,6 +371,34 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
       )
     );
   }
+
+  /**
+    * @dev Moves `amount` tokens from the caller's account to `recipient`.
+    *
+    * Returns a boolean value indicating whether the operation succeeded.
+    *
+    * Emits a {Transfer} event.
+    */
+  function transfer(address recipient, uint256 amount) public returns (bool) {
+    consolidateBalanceOf(msg.sender);
+    return super.transfer(recipient, amount);
+  }
+
+  /**
+    * @dev Moves `amount` tokens from `sender` to `recipient` using the
+    * allowance mechanism. `amount` is then deducted from the caller's
+    * allowance.
+    *
+    * Returns a boolean value indicating whether the operation succeeded.
+    *
+    * Emits a {Transfer} event.
+    */
+  function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+    consolidateBalanceOf(sender);
+    return super.transferFrom(sender, recipient, amount);
+  }
+
+  // ============= End ERC20 Overrides ============= //
 
   /**
     * @dev See {IERC777-operatorBurn}.
@@ -453,6 +542,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   }
 
   /**
+   * @notice Ensures any pending shares are minted to the user.
    * @dev First calls `consolidateSupply()`, then transfers tokens from the Pod to the user based
    * on the users consolidated supply.  Finally, it zeroes out the users consolidated supply.
    * @param user The user whose balance should be consolidated.
