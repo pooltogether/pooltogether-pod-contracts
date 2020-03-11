@@ -443,7 +443,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @return The current exchange rate mantissa.
    */
   function currentExchangeRateMantissa() external view returns (uint256) {
-    return exchangeRateTracker.currentExchangeRateMantissa();
+    return exchangeRateTracker.currentExchangeRate().mantissa;
   }
 
   /**

@@ -129,19 +129,6 @@ library ExchangeRateTracker {
   }
 
   /**
-   * Returns the current exchange rate mantissa as a fixed point 18 number (ie Ether).
-   *
-   * For example, an exchange rate of 0.5 would be represented as 500000000000000000
-   *
-   * @param self The State struct
-   * @return The current exchange rate mantissa
-   */
-  function currentExchangeRateMantissa(State storage self) internal view returns (uint256) {
-     wasInitialized(self);
-    return self.exchangeRates[self.exchangeRates.length - 1].exchangeRate.mantissa;
-  }
-
-  /**
    * Returns the current exchange rate as a FixedPoint.Fixed18 struct
    *
    * @param self The State struct
