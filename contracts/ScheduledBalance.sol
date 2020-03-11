@@ -24,36 +24,31 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
  * @author Brendan Asselstine
  * @notice Library for tracking deposits with respect to time.
  *
- * This library separates deposits into consolidated balances and unconsolidated balances.
- *
- * The consolidated balance is the sum of all deposits previous to a given timestamp.
- *
- * The unconsolidated balance is the sum of all deposits at or after a given timestamp.
+ * This library allows a user to "schedule" a deposit.  The deposit will be valid on and after a given timestamp.
  *
  * The word "timestamp" is used here because time always moves forward.  However, the value used for the timestamps
- * could have any granularity.
+ * could have any granularity.  In the Pod, we're passing draw ids.
+ *
+ * The contract only stores the deposit for a particular timestamp.  If a subsequent deposit is made with a later timestamp,
+ * that deposit replaces the current deposit.
  */
 library ScheduledBalance {
   using SafeMath for uint256;
 
   /**
-   * The structure containing a user's previously consolidated balance and their most recent deposit.
+   * The structure containing a user's scheduled balance.
    */
   struct State {
-    uint256 previousBalance;
-    uint256 previousTimestamp;
-    uint256 lastBalance;
+    uint256 lastDeposit;
     uint256 lastTimestamp;
   }
 
   /**
-   * Deposits the given amount.
+   * Schedules a deposit for the given amount at the given timestamp.
    *
-   * The provided timestamp *must* be the same or later than the last deposit timestamp.
+   * The timestamp must be greater than or equal to the previous deposit's timestamp.
    *
-   * If the current timestamp is greater than the last deposit timestamp, all existing
-   * deposit are consolidated and this deposit is set as the last.
-   * If the current timestamp is equal to the last deposit timestamp, it is merely added to the last deposit self.
+   * If the timestamp matches the previous deposit, the deposits are added.  Otherwise, the new deposit amount and timestamp replaces the old ones.
    *
    * @param self The ScheduledBalance.State struct
    * @param amount The amount to deposit
@@ -62,31 +57,22 @@ library ScheduledBalance {
   function deposit(State storage self, uint256 amount, uint256 currentTimestamp) internal {
     require(currentTimestamp >= self.lastTimestamp, "ScheduledBalance/backwards");
     if (self.lastTimestamp == currentTimestamp) {
-      self.lastBalance = self.lastBalance.add(amount);
+      self.lastDeposit = self.lastDeposit.add(amount);
     } else {
-      self.previousBalance = self.previousBalance.add(self.lastBalance);
-      self.previousTimestamp = self.lastTimestamp;
-      self.lastBalance = amount;
+      self.lastDeposit = amount;
       self.lastTimestamp = currentTimestamp;
     }
   }
 
   /**
-   * Withdraws the given amount from the unconsolidated deposits.
-   *
-   * The given timestamp is used to check the unconsolidated balance.
+   * Withdraws the given amount from the deposit.
    *
    * @param self The State struct
    * @param amount The amount to withdraw
-   * @param timestamp The current timestamp
    */
-  function withdrawUnconsolidated(State storage self, uint256 amount, uint256 timestamp) internal {
-    if (self.lastTimestamp == timestamp) {
-      require(amount <= self.lastBalance, "ScheduledBalance/insuff");
-      self.lastBalance = self.lastBalance.sub(amount);
-    } else { // unconsolidated must be zero
-      require(amount == 0, "ScheduledBalance/insuff");
-    }
+  function withdraw(State storage self, uint256 amount) internal {
+    require(amount <= self.lastDeposit, "ScheduledBalance/insuff");
+    self.lastDeposit = self.lastDeposit.sub(amount);
   }
 
   /**
@@ -96,78 +82,41 @@ library ScheduledBalance {
    *
    * @param self The State struct
    * @param currentTimestamp The current timestamp
-   * @return The consolidate balance
+   * @return The balance at the given time
    */
-  function consolidatedBalance(State storage self, uint256 currentTimestamp) internal view returns (uint256) {
-    (uint256 balance,) = consolidatedBalanceInfo(self, currentTimestamp);
+  function balanceAt(State storage self, uint256 currentTimestamp) internal view returns (uint256) {
+    (uint256 balance,) = balanceInfoAt(self, currentTimestamp);
     return balance;
   }
 
   /**
-   * Returns the consolidated balance and timestamp as of the given timestamp.
+   * Returns the balance at the given timestamp.
    *
-   * Any deposits made prior to the given timestamp are considered "consolidated".
-   *
-   * The provided timestamp *must* be the same or later than the last deposit timestamp.
-   *
-   * This function will return a tuple of the consolidated balance, and the timestamp of
-   * it's last deposit.
+   * If the deposit is before the timestamp, zero is returned for both the deposit and timestamp.
+   * If the balance is on or after the timestamp then the deposit and it's timestamp are returned.
    *
    * @param self The State struct
    * @param currentTimestamp The current timestamp
-   * @return A tuple (balance, timestamp) of the consolidate balance and last deposit time
+   * @return A tuple (uint256 balance, uint256 timestamp) of the balance at the given time.
    */
-  function consolidatedBalanceInfo(
+  function balanceInfoAt(
     State storage self,
     uint256 currentTimestamp
-  ) internal view notBackwards(self, currentTimestamp) returns (uint256 balance, uint256 timeslot) {
-    balance = self.previousBalance;
-    timeslot = self.previousTimestamp;
-    if (self.lastTimestamp < currentTimestamp) {
-      balance = balance.add(self.lastBalance);
-      timeslot = self.lastTimestamp;
+  ) internal view returns (uint256 balance, uint256 timestamp) {
+    if (self.lastTimestamp <= currentTimestamp) {
+      balance = self.lastDeposit;
+      timestamp = self.lastTimestamp;
     }
-    return (balance, timeslot);
+    return (balance, timestamp);
   }
 
   /**
-   * Returns the unconsolidated balance as of the given timestamp.
-   *
-   * Any deposits made on or after the given timestamp will be returned as the unconsolidated balance
+   * Completely zeroes out the deposit and timestamp.
    *
    * @param self The State struct
-   * @param currentTimestamp The current time
    */
-  function unconsolidatedBalance(
-    State storage self,
-    uint256 currentTimestamp
-  ) internal view notBackwards(self, currentTimestamp) returns (uint256) {
-    uint256 result;
-    if (currentTimestamp == self.lastTimestamp) {
-      result = result.add(self.lastBalance);
-    }
-    return result;
-  }
-
-  /**
-   * Zeroes out the consolidated balance give the current timestamp.
-   *
-   * Any balance before the given timestamp will be zeroed out.
-   *
-   * @param self The State struct
-   * @param currentTimestamp The current time
-   */
-  function clearConsolidated(State storage self, uint256 currentTimestamp) internal notBackwards(self, currentTimestamp) {
-    if (self.lastTimestamp < currentTimestamp) {
-      delete self.lastTimestamp;
-      delete self.lastBalance;
-    }
-    delete self.previousBalance;
-    delete self.previousTimestamp;
-  }
-
-  modifier notBackwards(State storage self, uint256 currentTimestamp) {
-    require(currentTimestamp >= self.lastTimestamp, "ScheduledBalance/backwards");
-    _;
+  function withdrawAll(State storage self) internal {
+    delete self.lastTimestamp;
+    delete self.lastDeposit;
   }
 }
