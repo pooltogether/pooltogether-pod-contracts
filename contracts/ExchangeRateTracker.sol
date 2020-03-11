@@ -22,7 +22,7 @@ import "./FixedPoint.sol";
 
 /**
  * @author Brendan Asselstine
- * @notice Tracks exchange rate history for a token and it's backing collateral.
+ * @notice Tracks exchange rate history for a token and its backing collateral.
  *
  * Users can query the historic exchange rate using a timestamp in O(log(n)) time.
  */
