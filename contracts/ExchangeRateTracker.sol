@@ -51,7 +51,7 @@ library ExchangeRateTracker {
    */
   function initialize(State storage self, uint256 baseExchangeRateMantissa) internal {
     require(baseExchangeRateMantissa > 0, "ExchangeRateTracker/non-zero");
-    self.exchangeRates.length = 0;
+    require(self.exchangeRates.length == 0, "ExchangeRateTracker/init-prev");
     self.exchangeRates.push(ExchangeRate(0, FixedPoint.Fixed18(baseExchangeRateMantissa)));
   }
 
