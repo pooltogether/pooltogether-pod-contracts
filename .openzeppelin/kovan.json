@@ -1,11 +1,11 @@
 {
   "contracts": {
-    "DaiPod": {
-      "address": "0x533Da53d2cf270056B8427D1A5812FFe2cDCa2dB",
-      "constructorCode": "6080604052614e85806100136000396000f3fe",
-      "bodyBytecodeHash": "7e8163c4abf334a9742b33e087e7a57bf8c620edb10fa03c9bc7c00c09306667",
-      "localBytecodeHash": "706eaf358850217c4577766e4fe67579a58a13891a4ce8da853b4131f18989c1",
-      "deployedBytecodeHash": "05427b841ee9433c41a9ed1132f93b751759a66d004afba0c029ec332f996947",
+    "UsdcPod": {
+      "address": "0x1b9cf2bDaeCD0c597391943f3ff8ba771A692D41",
+      "constructorCode": "608060405261506c806100136000396000f3fe",
+      "bodyBytecodeHash": "2fbf207e56aedb4b000ac2a3281449e404556e1608dc699e2550c175c2297332",
+      "localBytecodeHash": "7f16f95e2e41d3cb32e56f1ec5cdfb0e2140fd2fb2b417bbbb501821d602900f",
+      "deployedBytecodeHash": "57088303f40840c23fb85d23583fce915de422a43f4298a27b64f511d2556720",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -60,13 +60,13 @@
           "members": [
             {
               "label": "lastDeposit",
-              "astId": 9839,
+              "astId": 9868,
               "type": "t_uint256",
               "src": "1483:19:30"
             },
             {
               "label": "lastTimestamp",
-              "astId": 9841,
+              "astId": 9870,
               "type": "t_uint256",
               "src": "1508:21:30"
             }
@@ -293,12 +293,12 @@
         "uninitializedBaseContracts": []
       }
     },
-    "UsdcPod": {
-      "address": "0xA3482AbAaB96Bb93a421bCaED3151401EE36C568",
-      "constructorCode": "6080604052614e85806100136000396000f3fe",
-      "bodyBytecodeHash": "7e8163c4abf334a9742b33e087e7a57bf8c620edb10fa03c9bc7c00c09306667",
-      "localBytecodeHash": "706eaf358850217c4577766e4fe67579a58a13891a4ce8da853b4131f18989c1",
-      "deployedBytecodeHash": "05427b841ee9433c41a9ed1132f93b751759a66d004afba0c029ec332f996947",
+    "DaiPod": {
+      "address": "0x0034Ea9808E620A0EF79261c51AF20614B742B24",
+      "constructorCode": "608060405261506c806100136000396000f3fe",
+      "bodyBytecodeHash": "2fbf207e56aedb4b000ac2a3281449e404556e1608dc699e2550c175c2297332",
+      "localBytecodeHash": "7f16f95e2e41d3cb32e56f1ec5cdfb0e2140fd2fb2b417bbbb501821d602900f",
+      "deployedBytecodeHash": "57088303f40840c23fb85d23583fce915de422a43f4298a27b64f511d2556720",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -353,13 +353,13 @@
           "members": [
             {
               "label": "lastDeposit",
-              "astId": 9839,
+              "astId": 9868,
               "type": "t_uint256",
               "src": "1483:19:30"
             },
             {
               "label": "lastTimestamp",
-              "astId": 9841,
+              "astId": 9870,
               "type": "t_uint256",
               "src": "1508:21:30"
             }
@@ -589,7 +589,7 @@
   },
   "solidityLibs": {
     "FixedPoint": {
-      "address": "0x07F56574eE85a0CCB64D29dc1ddff2cA32778dbe",
+      "address": "0x70C7c10f9303451b2bf0b1ee069E434884D14b96",
       "constructorCode": "610340610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe",
       "bodyBytecodeHash": "e4127e06980b9be7d1bdef99f0a9081ad5f1e1060ff3ffe866cb010c780879ee",
       "localBytecodeHash": "0bbd5c9321889cbdfc6d818730a8587f791701e255f35fcebfeeb63f7dd076f5",
@@ -599,19 +599,19 @@
   "proxies": {
     "pooltogether-pods/DaiPod": [
       {
-        "address": "0xc2A8F46b2991F322ce233360Bcf15375EB792223",
+        "address": "0xa3a551e9987253b13aF5097e8748b0aE8E8b9AFA",
         "version": "0.2",
-        "implementation": "0xae3C0ca8f3D923301cBcfafEcC1da7D2897cc3F6",
-        "admin": "0x9DB6484E57864917949a7f8605e6E76be671044C",
+        "implementation": "0x0034Ea9808E620A0EF79261c51AF20614B742B24",
+        "admin": "0xBD87447F48ad729C5c4b8bcb503e1395F62e8B98",
         "kind": "Upgradeable"
       }
     ],
     "pooltogether-pods/UsdcPod": [
       {
-        "address": "0xbACF2e665B37F713C159705F59f5349F78858C2d",
+        "address": "0x23AA976A4413aC655a237Ff01083D62B0C4971e4",
         "version": "0.2",
-        "implementation": "0xA3482AbAaB96Bb93a421bCaED3151401EE36C568",
-        "admin": "0x9DB6484E57864917949a7f8605e6E76be671044C",
+        "implementation": "0x1b9cf2bDaeCD0c597391943f3ff8ba771A692D41",
+        "admin": "0xBD87447F48ad729C5c4b8bcb503e1395F62e8B98",
         "kind": "Upgradeable"
       }
     ]
@@ -619,6 +619,6 @@
   "manifestVersion": "2.2",
   "version": "0.2",
   "proxyAdmin": {
-    "address": "0x9DB6484E57864917949a7f8605e6E76be671044C"
+    "address": "0xBD87447F48ad729C5c4b8bcb503e1395F62e8B98"
   }
 }
