@@ -257,6 +257,30 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     _withdrawPendingDeposit(msg.sender, from, amount, data, operatorData);
   }
 
+  function withdrawAndRedeemCollateral(uint256 collateral) external nonReentrant {
+    _withdrawAndRedeemCollateral(msg.sender, msg.sender, collateral);
+  }
+
+  function operatorWithdrawAndRedeemCollateral(address from, uint256 collateral) external nonReentrant {
+    require(isOperatorFor(msg.sender, from), "Pod/not-op");
+    _withdrawAndRedeemCollateral(msg.sender, from, collateral);
+  }
+
+  function _withdrawAndRedeemCollateral(address operator, address from, uint256 amount) internal {
+    uint256 remainingCollateral = amount;
+    uint256 pending = pendingDeposit(from);
+    if (pending < remainingCollateral) {
+      _withdrawPendingDeposit(operator, from, pending, "", "");
+      remainingCollateral = remainingCollateral.sub(pending);
+    } else {
+      _withdrawPendingDeposit(operator, from, remainingCollateral, "", "");
+      return;
+    }
+
+    uint256 tokens = exchangeRateTracker.collateralToTokenValue(remainingCollateral);
+    _redeem(operator, from, tokens, "", "");
+  }
+
   /**
    * @notice Allows a user to withdraw their pending deposit
    * @param amount The amount the user wishes to withdraw
@@ -458,7 +482,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @param data User data included with the tx
    * @param operatorData Operator data included with the tx
    */
-  function operatorRedeem(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
+  function operatorRedeem(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external nonReentrant {
     require(isOperatorFor(msg.sender, account), "Pod/not-op");
     _redeem(msg.sender, account, amount, data, operatorData);
   }
@@ -468,7 +492,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @param amount The amount of tokens to convert to collateral
    * @param data User data included with the tx
    */
-  function redeem(uint256 amount, bytes calldata data) external {
+  function redeem(uint256 amount, bytes calldata data) external nonReentrant {
     _redeem(msg.sender, msg.sender, amount, data, "");
   }
 
@@ -487,7 +511,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
       bytes memory data,
       bytes memory operatorData
   )
-      internal nonReentrant
+      internal
   {
       consolidateBalanceOf(from);
       uint256 collateral = exchangeRateTracker.tokenToCollateralValue(amount);
@@ -504,7 +528,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @param data User data included with the tx
    * @param operatorData Operator data included with the tx
    */
-  function operatorRedeemToPool(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
+  function operatorRedeemToPool(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external nonReentrant {
     require(isOperatorFor(msg.sender, account), "Pod/not-op");
     _redeemToPool(msg.sender, account, amount, data, operatorData);
   }
@@ -514,7 +538,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @param amount The amount of tokens to convert to Pool tickets
    * @param data User data included with the tx
    */
-  function redeemToPool(uint256 amount, bytes calldata data) external {
+  function redeemToPool(uint256 amount, bytes calldata data) external nonReentrant {
     _redeemToPool(msg.sender, msg.sender, amount, data, "");
   }
 
@@ -532,7 +556,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     uint256 amount,
     bytes memory data,
     bytes memory operatorData
-  ) internal nonReentrant {
+  ) internal {
     consolidateBalanceOf(from);
     uint256 collateral = exchangeRateTracker.tokenToCollateralValue(amount);
     pool.poolToken().transfer(from, collateral);
