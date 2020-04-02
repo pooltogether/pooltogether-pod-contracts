@@ -22,6 +22,12 @@ contract('DrawExchangeRates', () => {
       exchangeRates = await ExposedExchangeRateTracker.new()
       await chai.assert.isRejected(exchangeRates.initialize(0), /ExchangeRateTracker\/non-zero/)
     })
+
+    it('cannot be called twice', async () => {
+      exchangeRates = await ExposedExchangeRateTracker.new()
+      await exchangeRates.initialize(1)
+      await chai.assert.isRejected(exchangeRates.initialize(1), /ExchangeRateTracker\/init-prev/)
+    })
   })
 
   describe('tokenToCollateralValue()', () => {

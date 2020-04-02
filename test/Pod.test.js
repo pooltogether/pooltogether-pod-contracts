@@ -319,7 +319,7 @@ contract('Pod', (accounts) => {
       // commit the tickets
       await podContext.nextDraw({ prize: toWei('0') })
 
-      await pod.send(user2, shareAmount, [], { from: user1 })
+      await pod.operatorSend(user1, user2, shareAmount, [], [], { from: user2 })
     })
   })
 

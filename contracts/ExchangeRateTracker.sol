@@ -22,7 +22,7 @@ import "./FixedPoint.sol";
 
 /**
  * @author Brendan Asselstine
- * @notice Tracks exchange rate history for a token and it's backing collateral.
+ * @notice Tracks exchange rate history for a token and its backing collateral.
  *
  * Users can query the historic exchange rate using a timestamp in O(log(n)) time.
  */
@@ -51,7 +51,7 @@ library ExchangeRateTracker {
    */
   function initialize(State storage self, uint256 baseExchangeRateMantissa) internal {
     require(baseExchangeRateMantissa > 0, "ExchangeRateTracker/non-zero");
-    self.exchangeRates.length = 0;
+    require(self.exchangeRates.length == 0, "ExchangeRateTracker/init-prev");
     self.exchangeRates.push(ExchangeRate(0, FixedPoint.Fixed18(baseExchangeRateMantissa)));
   }
 
