@@ -58,10 +58,6 @@ contract ExposedExchangeRateTracker {
     return state.collateralToTokenValueAt(collateral, timestamp);
   }
 
-  function currentExchangeRateMantissa() external view returns (uint256) {
-    return state.currentExchangeRateMantissa();
-  }
-
   function search(uint256 drawId) external view returns (uint256) {
     return state.search(drawId);
   }

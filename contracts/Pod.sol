@@ -168,7 +168,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * committed draw then those tokens will be transferred to the user.  We can do so because *we always have the exchange rate for the committed draw*
    *
    * @param operator The operator who kicked of the deposit
-   * @param from The user on whose half to deposit
+   * @param from The user on whose behalf to deposit
    * @param amount The amount of collateral to deposit
    * @param data Included user data
    * @param operatorData Included operator data
@@ -216,7 +216,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   }
 
   /**
-   * @notice Returns the collateral value of the given users tokens. If the user does not have any tokens, this will be zero.  Pending deposits are not included.
+   * @notice Returns the collateral value of the given user's tokens. If the user does not have any tokens, this will be zero.  Pending deposits are not included.
    * @param user The user whose balance should be checked
    * @return The collateral value of the tokens held by the user.
    */
@@ -443,7 +443,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @return The current exchange rate mantissa.
    */
   function currentExchangeRateMantissa() external view returns (uint256) {
-    return exchangeRateTracker.currentExchangeRateMantissa();
+    return exchangeRateTracker.currentExchangeRate().mantissa;
   }
 
   /**
@@ -550,7 +550,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   /**
    * @notice Ensures any pending shares are minted to the user.
    * @dev First calls `consolidateSupply()`, then transfers tokens from the Pod to the user based
-   * on the users consolidated supply.  Finally, it zeroes out the users consolidated supply.
+   * on the user's consolidated supply.  Finally, it zeroes out the user's consolidated supply.
    *
    * @param user The user whose balance should be consolidated.
    */

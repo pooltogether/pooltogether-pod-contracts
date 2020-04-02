@@ -76,9 +76,9 @@ library ScheduledBalance {
   }
 
   /**
-   * Returns the consolidated balance as of the given timestamp.
+   * Returns the balance as of the given timestamp.
    *
-   * Any deposits made prior to the given timestamp are considered "consolidated"
+   * If the deposit occured prior to the timestamp it is included.  Zero otherwise.
    *
    * @param self The State struct
    * @param currentTimestamp The current timestamp

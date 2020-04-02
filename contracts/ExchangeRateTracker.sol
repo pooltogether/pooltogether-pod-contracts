@@ -22,7 +22,7 @@ import "./FixedPoint.sol";
 
 /**
  * @author Brendan Asselstine
- * @notice Tracks exchange rate history for a token and it's backing collateral.
+ * @notice Tracks exchange rate history for a token and its backing collateral.
  *
  * Users can query the historic exchange rate using a timestamp in O(log(n)) time.
  */
@@ -51,7 +51,7 @@ library ExchangeRateTracker {
    */
   function initialize(State storage self, uint256 baseExchangeRateMantissa) internal {
     require(baseExchangeRateMantissa > 0, "ExchangeRateTracker/non-zero");
-    self.exchangeRates.length = 0;
+    require(self.exchangeRates.length == 0, "ExchangeRateTracker/init-prev");
     self.exchangeRates.push(ExchangeRate(0, FixedPoint.Fixed18(baseExchangeRateMantissa)));
   }
 
@@ -126,19 +126,6 @@ library ExchangeRateTracker {
   function collateralToTokenValueAt(State storage self, uint256 collateral, uint256 timestamp) internal view returns (uint256) {
     uint256 exchangeRateIndex = search(self, timestamp);
     return FixedPoint.multiplyUint(self.exchangeRates[exchangeRateIndex].exchangeRate, collateral);
-  }
-
-  /**
-   * Returns the current exchange rate mantissa as a fixed point 18 number (ie Ether).
-   *
-   * For example, an exchange rate of 0.5 would be represented as 500000000000000000
-   *
-   * @param self The State struct
-   * @return The current exchange rate mantissa
-   */
-  function currentExchangeRateMantissa(State storage self) internal view returns (uint256) {
-     wasInitialized(self);
-    return self.exchangeRates[self.exchangeRates.length - 1].exchangeRate.mantissa;
   }
 
   /**
