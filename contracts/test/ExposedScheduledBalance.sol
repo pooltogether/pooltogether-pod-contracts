@@ -29,19 +29,15 @@ contract ExposedScheduledBalance {
     scheduledBalance.deposit(amount, currentTimestamp);
   }
 
-  function withdrawUnconsolidated(uint256 amount, uint256 currentTimestamp) external {
-    scheduledBalance.withdrawUnconsolidated(amount, currentTimestamp);
+  function withdraw(uint256 amount) external {
+    scheduledBalance.withdraw(amount);
   }
 
-  function consolidatedBalance(uint256 currentTimestamp) external view returns (uint256) {
-    return scheduledBalance.consolidatedBalance(currentTimestamp);
+  function balanceAt(uint256 currentTimestamp) external view returns (uint256) {
+    return scheduledBalance.balanceAt(currentTimestamp);
   }
 
-  function unconsolidatedBalance(uint256 currentTimestamp) external view returns (uint256) {
-    return scheduledBalance.unconsolidatedBalance(currentTimestamp);
-  }
-
-  function clearConsolidated(uint256 currentTimestamp) external returns (uint256) {
-    scheduledBalance.clearConsolidated(currentTimestamp);
+  function withdrawAll() external returns (uint256) {
+    scheduledBalance.withdrawAll();
   }
 }

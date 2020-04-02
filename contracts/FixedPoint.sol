@@ -33,7 +33,7 @@ library FixedPoint {
   uint256 public constant SCALE = 1e18;
 
   /**
-   * A struct representing a fixed point 18 number (ie Ether).
+   * A struct representing a fixed point 18 mantissa (ie Ether).
    */
   struct Fixed18 {
     uint256 mantissa;

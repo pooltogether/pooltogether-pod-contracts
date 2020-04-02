@@ -1,11 +1,11 @@
 {
   "contracts": {
-    "Pod": {
-      "address": "0x29fe7D60DdF151E5b52e5FAB4f1325da6b2bD958",
-      "constructorCode": "608060405261502f806100136000396000f3fe",
-      "bodyBytecodeHash": "144fda727e251dad34d53e9b93c525dcaad844088eb2fe281eaaad2779fa0cae",
-      "localBytecodeHash": "6ff30e805322b58e3aa8c4b0407c0fb548b540b4debf8f7844c18974862fd10e",
-      "deployedBytecodeHash": "9e7620faa9318d3340b52387c14aa86a4d1ebb25b63cfe1abf481ddd895ae3cc",
+    "DaiPod": {
+      "address": "0x533Da53d2cf270056B8427D1A5812FFe2cDCa2dB",
+      "constructorCode": "6080604052614e85806100136000396000f3fe",
+      "bodyBytecodeHash": "7e8163c4abf334a9742b33e087e7a57bf8c620edb10fa03c9bc7c00c09306667",
+      "localBytecodeHash": "706eaf358850217c4577766e4fe67579a58a13891a4ce8da853b4131f18989c1",
+      "deployedBytecodeHash": "05427b841ee9433c41a9ed1132f93b751759a66d004afba0c029ec332f996947",
       "types": {
         "t_bool": {
           "id": "t_bool",
@@ -59,28 +59,16 @@
           "label": "ScheduledBalance.State",
           "members": [
             {
-              "label": "previousBalance",
-              "astId": 9758,
+              "label": "lastDeposit",
+              "astId": 9839,
               "type": "t_uint256",
-              "src": "1473:23:30"
-            },
-            {
-              "label": "previousTimestamp",
-              "astId": 9760,
-              "type": "t_uint256",
-              "src": "1502:25:30"
-            },
-            {
-              "label": "lastBalance",
-              "astId": 9762,
-              "type": "t_uint256",
-              "src": "1533:19:30"
+              "src": "1483:19:30"
             },
             {
               "label": "lastTimestamp",
-              "astId": 9764,
+              "astId": 9841,
               "type": "t_uint256",
-              "src": "1558:21:30"
+              "src": "1508:21:30"
             }
           ]
         },
@@ -99,7 +87,7 @@
               "label": "exchangeRates",
               "astId": 8367,
               "type": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
-              "src": "1234:28:27"
+              "src": "1233:28:27"
             }
           ]
         },
@@ -112,13 +100,13 @@
               "label": "timestamp",
               "astId": 8361,
               "type": "t_uint256",
-              "src": "1030:17:27"
+              "src": "1029:17:27"
             },
             {
               "label": "exchangeRate",
               "astId": 8363,
               "type": "t_struct<FixedPoint.Fixed18>",
-              "src": "1053:31:27"
+              "src": "1052:31:27"
             }
           ]
         },
@@ -129,9 +117,9 @@
           "members": [
             {
               "label": "mantissa",
-              "astId": 8695,
+              "astId": 8673,
               "type": "t_uint256",
-              "src": "1232:16:28"
+              "src": "1234:16:28"
             }
           ]
         },
@@ -268,33 +256,326 @@
           "contract": "Pod",
           "path": "contracts/Pod.sol",
           "label": "scheduledSupply",
-          "astId": 8899,
+          "astId": 8877,
           "type": "t_struct<ScheduledBalance.State>",
-          "src": "5808:47:29"
+          "src": "5815:47:29"
         },
         {
           "contract": "Pod",
           "path": "contracts/Pod.sol",
           "label": "scheduledBalances",
-          "astId": 8903,
+          "astId": 8881,
           "type": "t_mapping<t_struct<ScheduledBalance.State>>",
-          "src": "5945:69:29"
+          "src": "5952:69:29"
         },
         {
           "contract": "Pod",
           "path": "contracts/Pod.sol",
           "label": "exchangeRateTracker",
-          "astId": 8905,
+          "astId": 8883,
           "type": "t_struct<ExchangeRateTracker.State>",
-          "src": "6067:54:29"
+          "src": "6074:54:29"
         },
         {
           "contract": "Pod",
           "path": "contracts/Pod.sol",
           "label": "pool",
-          "astId": 8907,
+          "astId": 8885,
           "type": "t_address",
-          "src": "6188:24:29"
+          "src": "6195:24:29"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "UsdcPod": {
+      "address": "0xA3482AbAaB96Bb93a421bCaED3151401EE36C568",
+      "constructorCode": "6080604052614e85806100136000396000f3fe",
+      "bodyBytecodeHash": "7e8163c4abf334a9742b33e087e7a57bf8c620edb10fa03c9bc7c00c09306667",
+      "localBytecodeHash": "706eaf358850217c4577766e4fe67579a58a13891a4ce8da853b4131f18989c1",
+      "deployedBytecodeHash": "05427b841ee9433c41a9ed1132f93b751759a66d004afba0c029ec332f996947",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_string": {
+          "id": "t_string",
+          "kind": "elementary",
+          "label": "string"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_array:dyn<t_address>": {
+          "id": "t_array:dyn<t_address>",
+          "valueType": "t_address",
+          "length": "dyn",
+          "kind": "array",
+          "label": "address[]"
+        },
+        "t_mapping<t_bool>": {
+          "id": "t_mapping<t_bool>",
+          "valueType": "t_bool",
+          "label": "mapping(key => bool)",
+          "kind": "mapping"
+        },
+        "t_struct<ScheduledBalance.State>": {
+          "id": "t_struct<ScheduledBalance.State>",
+          "kind": "struct",
+          "label": "ScheduledBalance.State",
+          "members": [
+            {
+              "label": "lastDeposit",
+              "astId": 9839,
+              "type": "t_uint256",
+              "src": "1483:19:30"
+            },
+            {
+              "label": "lastTimestamp",
+              "astId": 9841,
+              "type": "t_uint256",
+              "src": "1508:21:30"
+            }
+          ]
+        },
+        "t_mapping<t_struct<ScheduledBalance.State>>": {
+          "id": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "valueType": "t_struct<ScheduledBalance.State>",
+          "label": "mapping(key => ScheduledBalance.State)",
+          "kind": "mapping"
+        },
+        "t_struct<ExchangeRateTracker.State>": {
+          "id": "t_struct<ExchangeRateTracker.State>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.State",
+          "members": [
+            {
+              "label": "exchangeRates",
+              "astId": 8367,
+              "type": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+              "src": "1233:28:27"
+            }
+          ]
+        },
+        "t_struct<ExchangeRateTracker.ExchangeRate>": {
+          "id": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.ExchangeRate",
+          "members": [
+            {
+              "label": "timestamp",
+              "astId": 8361,
+              "type": "t_uint256",
+              "src": "1029:17:27"
+            },
+            {
+              "label": "exchangeRate",
+              "astId": 8363,
+              "type": "t_struct<FixedPoint.Fixed18>",
+              "src": "1052:31:27"
+            }
+          ]
+        },
+        "t_struct<FixedPoint.Fixed18>": {
+          "id": "t_struct<FixedPoint.Fixed18>",
+          "kind": "struct",
+          "label": "FixedPoint.Fixed18",
+          "members": [
+            {
+              "label": "mantissa",
+              "astId": 8673,
+              "type": "t_uint256",
+              "src": "1234:16:28"
+            }
+          ]
+        },
+        "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>": {
+          "id": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+          "valueType": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "length": "dyn",
+          "kind": "array",
+          "label": "ExchangeRateTracker.ExchangeRate[]"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 2993,
+          "type": "t_bool",
+          "src": "757:24:14"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 2995,
+          "type": "t_bool",
+          "src": "876:25:14"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 3057,
+          "type": "t_array:50<t_uint256>",
+          "src": "1982:29:14"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_balances",
+          "astId": 1733,
+          "type": "t_mapping<t_uint256>",
+          "src": "1328:45:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_totalSupply",
+          "astId": 1735,
+          "type": "t_uint256",
+          "src": "1380:28:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_name",
+          "astId": 1737,
+          "type": "t_string",
+          "src": "1415:20:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_symbol",
+          "astId": 1739,
+          "type": "t_string",
+          "src": "1441:22:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_defaultOperatorsArray",
+          "astId": 1748,
+          "type": "t_array:dyn<t_address>",
+          "src": "2089:40:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_defaultOperators",
+          "astId": 1752,
+          "type": "t_mapping<t_bool>",
+          "src": "2223:50:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_operators",
+          "astId": 1758,
+          "type": "t_mapping<t_bool>",
+          "src": "2363:63:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_revokedDefaultOperators",
+          "astId": 1764,
+          "type": "t_mapping<t_bool>",
+          "src": "2432:77:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_allowances",
+          "astId": 1770,
+          "type": "t_mapping<t_uint256>",
+          "src": "2540:69:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "______gap",
+          "astId": 2691,
+          "type": "t_array:50<t_uint256>",
+          "src": "16391:29:8"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "_guardCounter",
+          "astId": 2955,
+          "type": "t_uint256",
+          "src": "733:29:13"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "______gap",
+          "astId": 2988,
+          "type": "t_array:50<t_uint256>",
+          "src": "1563:29:13"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledSupply",
+          "astId": 8877,
+          "type": "t_struct<ScheduledBalance.State>",
+          "src": "5815:47:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledBalances",
+          "astId": 8881,
+          "type": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "src": "5952:69:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "exchangeRateTracker",
+          "astId": 8883,
+          "type": "t_struct<ExchangeRateTracker.State>",
+          "src": "6074:54:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "pool",
+          "astId": 8885,
+          "type": "t_address",
+          "src": "6195:24:29"
         }
       ],
       "warnings": {
@@ -308,7 +589,7 @@
   },
   "solidityLibs": {
     "FixedPoint": {
-      "address": "0x88F48f21Be70c420386b4923a5b60Ba95E334d09",
+      "address": "0x07F56574eE85a0CCB64D29dc1ddff2cA32778dbe",
       "constructorCode": "610340610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe",
       "bodyBytecodeHash": "e4127e06980b9be7d1bdef99f0a9081ad5f1e1060ff3ffe866cb010c780879ee",
       "localBytecodeHash": "0bbd5c9321889cbdfc6d818730a8587f791701e255f35fcebfeeb63f7dd076f5",
@@ -316,12 +597,21 @@
     }
   },
   "proxies": {
-    "pooltogether-pods/Pod": [
+    "pooltogether-pods/DaiPod": [
       {
-        "address": "0xB2E6e3D9Af235434385c28Bd31d98041A48226a6",
+        "address": "0xc2A8F46b2991F322ce233360Bcf15375EB792223",
         "version": "0.2",
-        "implementation": "0x29fe7D60DdF151E5b52e5FAB4f1325da6b2bD958",
-        "admin": "0x49d716DFe60b37379010A75329ae09428f17118d",
+        "implementation": "0xae3C0ca8f3D923301cBcfafEcC1da7D2897cc3F6",
+        "admin": "0x9DB6484E57864917949a7f8605e6E76be671044C",
+        "kind": "Upgradeable"
+      }
+    ],
+    "pooltogether-pods/UsdcPod": [
+      {
+        "address": "0xbACF2e665B37F713C159705F59f5349F78858C2d",
+        "version": "0.2",
+        "implementation": "0xA3482AbAaB96Bb93a421bCaED3151401EE36C568",
+        "admin": "0x9DB6484E57864917949a7f8605e6E76be671044C",
         "kind": "Upgradeable"
       }
     ]
@@ -329,6 +619,6 @@
   "manifestVersion": "2.2",
   "version": "0.2",
   "proxyAdmin": {
-    "address": "0x49d716DFe60b37379010A75329ae09428f17118d"
+    "address": "0x9DB6484E57864917949a7f8605e6E76be671044C"
   }
 }
