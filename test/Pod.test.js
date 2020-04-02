@@ -379,6 +379,56 @@ contract('Pod', (accounts) => {
     })
   })
 
+  describe('tokenToCollateralValue()', () => {
+    it('should return an amount calculated from the exchange rate', async () => {
+      const amount = toWei('10')
+
+      // first deposit
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+      
+      // commit first, commit second, then reward and double the value of shares
+      await podContext.nextDraw({ prize: toWei('0') })
+      await podContext.nextDraw({ prize: toWei('0') })
+      await podContext.nextDraw({ prize: toWei('10') })
+
+      // one share is now worth two dai
+      assert.equal((await pod.tokenToCollateralValue(toWei('1000000'))).toString(), toWei('2'))
+    })
+  })
+
+  describe('collateralToTokenValue()', () => {
+    it('should return an amount calculated from the exchange rate', async () => {
+      const amount = toWei('10')
+
+      // first deposit
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+      
+      // commit first, commit second, then reward and double the value of shares
+      await podContext.nextDraw({ prize: toWei('0') })
+      await podContext.nextDraw({ prize: toWei('0') })
+      await podContext.nextDraw({ prize: toWei('10') })
+
+      // one share is now worth two dai
+      assert.equal((await pod.collateralToTokenValue(toWei('2'))).toString(), toWei('1000000'))
+    })
+  })
+
+  describe('totalPendingDeposits()', () => {
+    it('should include all deposits from all users', async () => {
+      const amount = toWei('10')
+      
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      await token.approve(pod.address, amount, { from: user2 })
+      await pod.deposit(amount, [], { from: user2 })
+
+      assert.equal(await pod.totalPendingDeposits(), toWei('20'))
+    })
+  })
+
   describe('deposit()', () => {
     it('should allow a user to deposit into the pod', async () => {
       const amount = toWei('10')

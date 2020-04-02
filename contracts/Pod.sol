@@ -235,6 +235,11 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     return scheduledBalances[user].balanceAt(pool.currentOpenDrawId()).sub(committedBalance);
   }
 
+  function totalPendingDeposits() public view returns (uint256) {
+    uint256 committedBalance = scheduledSupply.balanceAt(pool.currentCommittedDrawId());
+    return scheduledSupply.balanceAt(pool.currentOpenDrawId()).sub(committedBalance);
+  }
+
   /**
    * @notice Allows an operator to withdraw a user's pending deposit on their behalf
    * @param from The user on whose behalf to withdraw
@@ -533,6 +538,14 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     pool.poolToken().transfer(from, collateral);
     emit RedeemedToPool(operator, from, amount, collateral, data, operatorData);
     _burn(operator, from, amount, data, operatorData);
+  }
+
+  function tokenToCollateralValue(uint256 tokens) external view returns (uint256) {
+    return exchangeRateTracker.tokenToCollateralValue(tokens);
+  }
+
+  function collateralToTokenValue(uint256 collateral) external view returns (uint256) {
+    return exchangeRateTracker.collateralToTokenValue(collateral);
   }
 
   /**
