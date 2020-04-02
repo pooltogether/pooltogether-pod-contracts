@@ -600,4 +600,35 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
       _send(address(this), address(this), user, tokens, "", "", true);
     }
   }
+
+  /**
+     * @dev Call to.tokensReceived() if the interface is registered. Reverts if the recipient is a contract but
+     * tokensReceived() was not registered for the recipient.
+     *
+     * NOTE: We are relaxing the constraints such that if the receiver is a contract it does *not* need to
+     * implement ERC777TokensRecipient
+     *
+     * @param operator address operator requesting the transfer
+     * @param from address token holder address
+     * @param to address recipient address
+     * @param amount uint256 amount of tokens to transfer
+     * @param userData bytes extra information provided by the token holder (if any)
+     * @param operatorData bytes extra information provided by the operator (if any)
+     */
+    function _callTokensReceived(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData,
+        bool
+    )
+        internal
+    {
+        address implementer = ERC1820_REGISTRY.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
+        if (implementer != address(0)) {
+            IERC777Recipient(implementer).tokensReceived(operator, from, to, amount, userData, operatorData);
+        }
+    }
 }

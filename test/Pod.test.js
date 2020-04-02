@@ -85,7 +85,7 @@ contract('Pod', (accounts) => {
   }
 
   describe('tokensReceived()', () => {
-    xit('should not accept from strange tokens', async () => {
+    it('should not accept from strange tokens', async () => {
       let token = await poolContext.new777Token()
 
       await chai.assert.isRejected(token.send(pod.address, toWei('100'), []), /Pod\/unknown-token/)
@@ -93,12 +93,12 @@ contract('Pod', (accounts) => {
   })
 
   describe('initialize()', () => {
-    xit('should not allow null pool', async () => {
+    it('should not allow null pool', async () => {
       let pod = await podContext.createPodNoInit()
       await chai.assert.isRejected(pod.initialize(ZERO_ADDRESS), /Pod\/pool-def/)
     })
 
-    xit('should initialize the contract properly', async () => {
+    it('should initialize the contract properly', async () => {
       assert.equal(await pod.pool(), pool.address)
       assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('ERC777TokensRecipient')), pod.address)
       assert.equal(await registry.getInterfaceImplementer(pod.address, web3.utils.soliditySha3('PoolTogetherRewardListener')), pod.address)
@@ -106,13 +106,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('currentExchangeRateMantissa()', () => {
-    xit('should default to one million', async () => {
+    it('should default to one million', async () => {
       assert.equal(await pod.currentExchangeRateMantissa(), toWei('1000000'))
     })
   })
 
   describe('tokensReceived()', () => {
-    xit('should accept pool tokens', async () => {
+    it('should accept pool tokens', async () => {
       const amount = toWei('10')
 
       await depositDrawTransfer(amount, user1)
@@ -124,7 +124,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pool.committedBalanceOf(pod.address), amount)
     })
 
-    xit('should mint everyone the same number', async () => {
+    it('should mint everyone the same number', async () => {
       const amount = toWei('10')
 
       // deposit into pool
@@ -146,7 +146,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOf(user2), tenMillion)
     })
 
-    xit('should calculate the exchange rate when there are winnings', async () => {
+    it('should calculate the exchange rate when there are winnings', async () => {
       const amount = toWei('10')
 
       // deposit, commit and transfer
@@ -180,7 +180,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorDeposit()', () => {
-    xit('should allow an operator to deposit on behalf of a user', async () => {
+    it('should allow an operator to deposit on behalf of a user', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
       await pod.operatorDeposit(user1, amount, [], [], { from: user2 })
@@ -190,13 +190,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('rewarded()', () => {
-    xit('can only be called by the pool', async () => {
+    it('can only be called by the pool', async () => {
       chai.assert.isRejected(pod.rewarded(user1, toWei('10'), '1'), /Pod\/only-pool/)
     })
   })
 
   describe('withdrawPendingDeposit', () => {
-    xit('should transfer the tokens back', async () => {
+    it('should transfer the tokens back', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, [], { from: user1 })
@@ -221,7 +221,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pool.openBalanceOf(pod.address), '0')
     })
 
-    xit('should reject when insufficient funds', async () => {
+    it('should reject when insufficient funds', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, [], { from: user1 })
@@ -230,7 +230,7 @@ contract('Pod', (accounts) => {
       await chai.assert.isRejected(pod.withdrawPendingDeposit(tooMuch, [], { from: user1 }), /ScheduledBalance\/insuff/)
     })
 
-    xit('should support partial withdrawals', async () => {
+    it('should support partial withdrawals', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, [], { from: user1 })
@@ -255,7 +255,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pool.openBalanceOf(pod.address), toWei('6'))
     })
 
-    xit('should not interfere with the supply', async () => {
+    it('should not interfere with the supply', async () => {
       const amount = web3.utils.toBN(toWei('10'))
 
       await token.approve(pod.address, amount, { from: user1 })
@@ -292,7 +292,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('send()', () => {
-    xit('should allow the user to send tokens that have not yet minted', async () => {
+    it('should allow the user to send tokens that have not yet minted', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       const shareAmount = web3.utils.toBN(toWei('10000000'))
 
@@ -307,7 +307,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorSend()', () => {
-    xit('should allow an operator to send tokens that have not yet minted', async () => {
+    it('should allow an operator to send tokens that have not yet minted', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       const shareAmount = web3.utils.toBN(toWei('10000000'))
 
@@ -324,7 +324,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('transfer()', () => {
-    xit('should allow a user to transfer tokens that have not yet minted', async () => {
+    it('should allow a user to transfer tokens that have not yet minted', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       const shareAmount = web3.utils.toBN(toWei('10000000'))
 
@@ -339,7 +339,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('transferFrom()', () => {
-    xit('should allow an operator to transfer tokens that have not yet minted', async () => {
+    it('should allow an operator to transfer tokens that have not yet minted', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       const shareAmount = web3.utils.toBN(toWei('10000000'))
 
@@ -356,14 +356,14 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorWithdrawPendingDeposit', () => {
-    xit('should disallow non-operators', async () => {
+    it('should disallow non-operators', async () => {
       const amount = web3.utils.toBN(toWei('10'))
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, [], { from: user1 })
       await chai.assert.isRejected(pod.operatorWithdrawPendingDeposit(user1, amount, [], [], { from: user2 }), /Pod\/not-op/)
     })
 
-    xit('should allow operators', async () => {
+    it('should allow operators', async () => {
       await pod.authorizeOperator(user2, { from: user1 })
       const amount = web3.utils.toBN(toWei('10'))
       await token.approve(pod.address, amount, { from: user1 })
@@ -380,7 +380,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('tokenToCollateralValue()', () => {
-    xit('should return an amount calculated from the exchange rate', async () => {
+    it('should return an amount calculated from the exchange rate', async () => {
       const amount = toWei('10')
 
       // first deposit
@@ -398,7 +398,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('collateralToTokenValue()', () => {
-    xit('should return an amount calculated from the exchange rate', async () => {
+    it('should return an amount calculated from the exchange rate', async () => {
       const amount = toWei('10')
 
       // first deposit
@@ -416,7 +416,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('totalPendingDeposits()', () => {
-    xit('should include all deposits from all users', async () => {
+    it('should include all deposits from all users', async () => {
       const amount = toWei('10')
       
       await token.approve(pod.address, amount, { from: user1 })
@@ -430,7 +430,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('withdrawAndRedeemCollateral()', () => {
-    xit('should allow the user to withdraw their pending', async () => {
+    it('should allow the user to withdraw their pending', async () => {
       const amount = toWei('10')
       
       await token.approve(pod.address, amount, { from: user1 })
@@ -441,7 +441,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.pendingDeposit(user1), '0')
     })
 
-    xit('should allow the user to withdraw their tokens', async () => {
+    it('should allow the user to withdraw their tokens', async () => {
       const amount = toWei('10')
       
       await token.approve(pod.address, amount, { from: user1 })
@@ -455,7 +455,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOfUnderlying(user1), '0')
     })
 
-    xit('should allow a user to withdraw both', async () => {
+    it('should allow a user to withdraw both', async () => {
       const amount = toWei('10')
       
       await token.approve(pod.address, amount, { from: user1 })
@@ -470,6 +470,23 @@ contract('Pod', (accounts) => {
       await pod.withdrawAndRedeemCollateral(toWei('20'), { from: user1 })
 
       assert.equal(await pod.balanceOfUnderlying(user1), '0')
+    })
+  })
+
+  describe('send', () => {
+    it('should be able to send to any contract', async () => {
+      const amount = toWei('10')
+
+      // deposit
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+      
+      // commit
+      await podContext.nextDraw()
+
+      await pod.send(token.address, amount, [], { from: user1 })
+
+      assert.equal(await pod.balanceOf(token.address), amount)
     })
   })
 
@@ -493,7 +510,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('deposit()', () => {
-    xit('should allow a user to deposit into the pod', async () => {
+    it('should allow a user to deposit into the pod', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
       const { logs } = await pod.deposit(amount, [], { from: user1 })
@@ -509,7 +526,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOf(user1), '0')
     })
 
-    xit('should convert their deposit to tickets on next draw', async () => {
+    it('should convert their deposit to tickets on next draw', async () => {
       const amount = toWei('10')
       await token.approve(pod.address, amount, { from: user1 })
       await pod.deposit(amount, [], { from: user1 })
@@ -518,7 +535,7 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOfUnderlying(user1), amount)
     })
 
-    xit('should reward only those who are committed', async () => {
+    it('should reward only those who are committed', async () => {
       const amount = toWei('10')
 
       // first deposit
@@ -548,7 +565,7 @@ contract('Pod', (accounts) => {
       assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('10'))
     })
 
-    xit('should retain a history of exchange rates for old deposits', async () => {
+    it('should retain a history of exchange rates for old deposits', async () => {
       const amount = toWei('10')
 
       // first deposit
@@ -586,7 +603,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('redeem', () => {
-    xit('should allow a user to redeem all of their tokens', async () => {
+    it('should allow a user to redeem all of their tokens', async () => {
       const amount = toWei('10')
       // deposit, reward, and transfer.
       await depositDrawTransfer(amount, user1)
@@ -604,7 +621,7 @@ contract('Pod', (accounts) => {
       assert.equal((await pod.balanceOf(user1)).toString(), '0')
     })
 
-    xit('should allow a user to redeem zero tokens', async () => {
+    it('should allow a user to redeem zero tokens', async () => {
       // Ensure committed draw
       await podContext.nextDraw()
 
@@ -616,7 +633,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorRedeem', () => {
-    xit('should fail if the user is not an operator', async () => {
+    it('should fail if the user is not an operator', async () => {
       const amount = toWei('10')
       // deposit, reward, and transfer.
       await depositDrawTransfer(amount, user1)
@@ -624,7 +641,7 @@ contract('Pod', (accounts) => {
       await chai.assert.isRejected(pod.operatorRedeem(user1, await pod.balanceOf(user1), [], [], { from: user2 }), /Pod\/not-op/)
     })
 
-    xit('should allow an operator to redeem on behalf of a user', async () => {
+    it('should allow an operator to redeem on behalf of a user', async () => {
       const amount = toWei('10')
       // deposit, reward, and transfer.
       await depositDrawTransfer(amount, user1)
@@ -639,7 +656,7 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorRedeemToPool()', () => {
-    xit('should allow an operator to transfer', async () => {
+    it('should allow an operator to transfer', async () => {
 
       const amount = toWei('10')
       await depositPod(amount, { from: user1 })
@@ -663,13 +680,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('redeemToPool()', () => {
-    xit('should not allow a user to transfer unless they have tokens', async () => {
+    it('should not allow a user to transfer unless they have tokens', async () => {
       const amount = toWei('10')
       await depositPod(amount, { from: user1 })
       await chai.assert.isRejected(pod.redeemToPool('1', { from: user1 }))
     })
 
-    xit('should allow a user to transfer', async () => {
+    it('should allow a user to transfer', async () => {
       const amount = toWei('10')
       await depositPod(amount, { from: user1 })
 
@@ -683,7 +700,7 @@ contract('Pod', (accounts) => {
       assert.equal((await pool.committedBalanceOf(user1)).toString(), amount)
     })
 
-    xit('should allow a user to partially transfer', async () => {
+    it('should allow a user to partially transfer', async () => {
 
       const amount = toWei('10')
 
@@ -709,13 +726,13 @@ contract('Pod', (accounts) => {
   })
 
   describe('operatorBurn()', () => {
-    xit('should revert', async () => {
+    it('should revert', async () => {
       await chai.assert.isRejected(pod.operatorBurn(user1, toWei('10'), [], []), /Pod\/no-op/)
     })
   })
 
   describe('burn()', () => {
-    xit('should revert', async () => {
+    it('should revert', async () => {
       await chai.assert.isRejected(pod.burn(toWei('10'), []), /Pod\/no-op/)
     })
   })
