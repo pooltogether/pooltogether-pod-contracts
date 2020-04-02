@@ -182,7 +182,7 @@ contract('Pod', (accounts) => {
   describe('operatorDeposit()', () => {
     it('should allow an operator to deposit on behalf of a user', async () => {
       const amount = toWei('10')
-      await token.approve(pod.address, amount, { from: user2 })
+      await token.approve(pod.address, amount, { from: user1 })
       await pod.operatorDeposit(user1, amount, [], [], { from: user2 })
       assert.equal(await pod.pendingDeposit(user1), amount)
       assert.equal(await pod.balanceOf(user1), '0')
@@ -253,6 +253,105 @@ contract('Pod', (accounts) => {
       assert.equal(await pod.balanceOf(user1), '0')
       assert.equal(await pool.committedBalanceOf(pod.address), '0')
       assert.equal(await pool.openBalanceOf(pod.address), toWei('6'))
+    })
+
+    it('should not interfere with the supply', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      // commit the tickets
+      await podContext.nextDraw({ prize: toWei('0') })
+
+      // award
+      await podContext.nextDraw({ prize: toWei('2') })
+
+      const amount2 = web3.utils.toBN(toWei('12'))
+
+      // deposit for user2
+      await token.approve(pod.address, amount2, { from: user2 })
+      await pod.deposit(amount2, [], { from: user2 })
+
+      // deposit for user3
+      await token.approve(pod.address, amount2, { from: user3 })
+      await pod.deposit(amount2, [], { from: user3 })
+
+      // withdraw for user3, user 2 should be unaffected
+      await pod.withdrawPendingDeposit(amount2, [], { from: user3 })
+
+      // commit tickets
+      await podContext.nextDraw({ prize: toWei('0') })
+
+      // mutual award
+      await podContext.nextDraw({ prize: toWei('2') })
+
+      assert.equal((await pod.balanceOfUnderlying(user1)).toString(), toWei('13'))
+      assert.equal((await pod.balanceOfUnderlying(user2)).toString(), toWei('13'))
+    })
+  })
+
+  describe('send()', () => {
+    it('should allow the user to send tokens that have not yet minted', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      const shareAmount = web3.utils.toBN(toWei('10000000'))
+
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      // commit the tickets
+      await podContext.nextDraw({ prize: toWei('0') })
+
+      await pod.send(user2, shareAmount, [], { from: user1 })
+    })
+  })
+
+  describe('operatorSend()', () => {
+    it('should allow an operator to send tokens that have not yet minted', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      const shareAmount = web3.utils.toBN(toWei('10000000'))
+
+      await pod.authorizeOperator(user2, { from: user1 })
+
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      // commit the tickets
+      await podContext.nextDraw({ prize: toWei('0') })
+
+      await pod.operatorSend(user1, user2, shareAmount, [], [], { from: user2 })
+    })
+  })
+
+  describe('transfer()', () => {
+    it('should allow a user to transfer tokens that have not yet minted', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      const shareAmount = web3.utils.toBN(toWei('10000000'))
+
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      // commit the tickets
+      await podContext.nextDraw({ prize: toWei('0') })
+
+      await pod.transfer(user2, shareAmount, { from: user1 })
+    })
+  })
+
+  describe('transferFrom()', () => {
+    it('should allow an operator to transfer tokens that have not yet minted', async () => {
+      const amount = web3.utils.toBN(toWei('10'))
+      const shareAmount = web3.utils.toBN(toWei('10000000'))
+
+      await pod.approve(user2, shareAmount, { from: user1 })
+
+      await token.approve(pod.address, amount, { from: user1 })
+      await pod.deposit(amount, [], { from: user1 })
+
+      // commit the tickets
+      await podContext.nextDraw({ prize: toWei('0') })
+
+      await pod.transferFrom(user1, user3, shareAmount, { from: user2 })
     })
   })
 

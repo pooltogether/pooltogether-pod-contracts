@@ -9,21 +9,28 @@ async function migrate(context, ozNetworkName, ozOptions = '') {
   const project = new Project('.oz-migrate')
   const migration = await project.migrationForNetwork(ozNetworkName)
 
-  let poolDai
+  let poolDai, poolUsdc
   if (ozNetworkName === 'mainnet') {
     poolDai = '0x29fe7D60DdF151E5b52e5FAB4f1325da6b2bD958'
+    poolUsdc = '0x0034Ea9808E620A0EF79261c51AF20614B742B24'
   } else if (ozNetworkName === 'kovan') { //assume mainnet
     poolDai = '0xC3a62C8Af55c59642071bC171Ebd05Eb2479B663'
+    poolUsdc = '0xb073a5a16025c91ae3e9764E5cc5fC4DD2fA99Bc'
   } else {
-    poolDai = process.env.POOL_DAI_ADDRESS_LOCALHOST
+    throw new Error('Unknown network')
   }
 
   runShell(`oz session ${ozOptions} --network ${ozNetworkName} --from ${process.env.ADMIN_ADDRESS} --expires 3600 --timeout 600`)
 
-  console.log(chalk.green('Starting Pod deployment'))
-
   await migration.migrate(10, async () => {
-    runShell(`oz create Pod --init initialize --args ${poolDai}`)
+    console.log(chalk.green('Starting DaiPod deployment...'))
+    runShell(`oz create DaiPod --init initialize --args ${poolDai}`)
+    context.reload()
+  })
+
+  await migration.migrate(20, async () => {
+    console.log(chalk.green('Starting UsdcPod deployment...'))
+    runShell(`oz create UsdcPod --init initialize --args ${poolUsdc}`)
     context.reload()
   })
 

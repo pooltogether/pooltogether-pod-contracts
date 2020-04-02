@@ -1,7 +1,8 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "Pod": "Pod"
+    "DaiPod": "Pod",
+    "UsdcPod": "Pod"
   },
   "dependencies": {},
   "name": "pooltogether-pods",

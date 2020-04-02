@@ -15,25 +15,23 @@ contract('ScheduledBalance', (accounts) => {
   describe('deposit()', () => {
     it('should allow a user to deposit', async () => {
       await scheduledBalance.deposit('2', '1')
-      chai.assert.equal(await scheduledBalance.consolidatedBalance('1'), '0')
-      chai.assert.equal(await scheduledBalance.unconsolidatedBalance('1'), '2')
-      chai.assert.equal(await scheduledBalance.unconsolidatedBalance('2'), '0')
+      chai.assert.equal(await scheduledBalance.balanceAt('0'), '0')
+      chai.assert.equal(await scheduledBalance.balanceAt('1'), '2')
     })
 
-    it('should allow a user to deposit more than once to the same draw', async () => { 
+    it('should allow a user to deposit more than once to the same time', async () => { 
       await scheduledBalance.deposit('2', '1')
       await scheduledBalance.deposit('3', '1')
-      chai.assert.equal(await scheduledBalance.consolidatedBalance('1'), '0')
-      chai.assert.equal(await scheduledBalance.unconsolidatedBalance('1'), '5')
+      chai.assert.equal(await scheduledBalance.balanceAt('0'), '0')
+      chai.assert.equal(await scheduledBalance.balanceAt('1'), '5')
     })
 
     it('should allow a user to deposit more than once to different draws', async () => { 
       await scheduledBalance.deposit('2', '1')
+      // previous balance is overwritten, as '3' is now the current time
       await scheduledBalance.deposit('3', '3')
-      chai.assert.equal(await scheduledBalance.consolidatedBalance('3'), '2')
-      chai.assert.equal(await scheduledBalance.consolidatedBalance('4'), '5')
-      chai.assert.equal(await scheduledBalance.unconsolidatedBalance('3'), '3')
-      chai.assert.equal(await scheduledBalance.unconsolidatedBalance('4'), '0')
+      chai.assert.equal(await scheduledBalance.balanceAt('2'), '0')
+      chai.assert.equal(await scheduledBalance.balanceAt('3'), '3')
     })
 
     it('should not allow deposits in the past', async () => { 
@@ -42,59 +40,39 @@ contract('ScheduledBalance', (accounts) => {
     })
   })
 
-  describe('withdrawUnconsolidated()', () => {
+  describe('withdraw()', () => {
     it('should withdraw a users recent balance', async () => {
-      await scheduledBalance.deposit('2', '1')
       await scheduledBalance.deposit('3', '2')
-      await scheduledBalance.withdrawUnconsolidated('3', '2')
-      assert.equal(await scheduledBalance.unconsolidatedBalance('2'), '0')
+      await scheduledBalance.withdraw('3')
+      assert.equal(await scheduledBalance.balanceAt('2'), '0')
     })
 
     it('should allow a partial withdrawal', async () => {
-      await scheduledBalance.deposit('2', '1')
       await scheduledBalance.deposit('3', '2')
-      await scheduledBalance.withdrawUnconsolidated('2', '2')
-      assert.equal(await scheduledBalance.unconsolidatedBalance('2'), '1')
+      await scheduledBalance.withdraw('2')
+      assert.equal(await scheduledBalance.balanceAt('2'), '1')
     })
 
     it('should disallow withdrawals greater than balance', async () => {
-      await scheduledBalance.deposit('2', '1')
       await scheduledBalance.deposit('3', '2')
-      await chai.assert.isRejected(scheduledBalance.withdrawUnconsolidated('4', '2'), /ScheduledBalance\/insuff/)
+      await chai.assert.isRejected(scheduledBalance.withdraw('4'), /ScheduledBalance\/insuff/)
     })
 
-    it('should disallow when in future', async () => {
+    it('should be cool when amount is zero', async () => {
       await scheduledBalance.deposit('2', '1')
-      await chai.assert.isRejected(scheduledBalance.withdrawUnconsolidated('4', '2'), /ScheduledBalance\/insuff/)
-    })
-
-    it('should be cool when its the future but amount is zero', async () => {
-      await scheduledBalance.deposit('2', '1')
-      await scheduledBalance.withdrawUnconsolidated('0', '2')
-      assert.equal(await scheduledBalance.unconsolidatedBalance('2'), '0')
+      await scheduledBalance.withdraw('0')
+      assert.equal(await scheduledBalance.balanceAt('1'), '2')
     })
   })
 
-  describe('clearConsolidated()', () => {
-    it('should require a timestamp no earlier than the last', async () => {
-      await scheduledBalance.deposit('2', '1')
-      await chai.assert.isRejected(scheduledBalance.clearConsolidated('0'), /ScheduledBalance\/backwards/)
-    })
-
-    it('should erase all committed amounts', async () => {
+  describe('withdrawAll()', () => {
+    it('should withdraw all amounts', async () => {
       await scheduledBalance.deposit('2', '1')
       await scheduledBalance.deposit('3', '2')
 
-      await scheduledBalance.clearConsolidated('4')
+      await scheduledBalance.withdrawAll()
 
-      assert.equal(await scheduledBalance.consolidatedBalance('5'), '0')
-    })
-
-    it('should ignore the open amount', async () => {
-      await scheduledBalance.deposit('2', '1')
-      await scheduledBalance.deposit('3', '2')
-      await scheduledBalance.clearConsolidated('2')
-      assert.equal(await scheduledBalance.consolidatedBalance('5'), '3')
+      assert.equal(await scheduledBalance.balanceAt('5'), '0')
     })
   })
 })
