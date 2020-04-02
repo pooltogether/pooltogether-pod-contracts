@@ -77,7 +77,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @notice Event emitted when a user or operator redeems tokens into the backing collateral
    * @param operator The operator who kicked off the transaction
    * @param from The account that is being debited
-   * @param amount The amount of Pod shares burned
+   * @param amount The amount of Pod shares redeemed.
    * @param collateral The amount of collateral that was returned
    * @param data Data the debited account included in the tx
    * @param operatorData Data the operator included in the tx
@@ -88,7 +88,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @notice Event emitted when a user or operator redeems tokens into Pool tickets
    * @param operator The operator who kicked off the transaction
    * @param from The account that is being debited
-   * @param amount The amount of Pod shares burned
+   * @param amount The amount of Pod shares redeemed.
    * @param collateral The amount of Pool tickets redeemed.
    * @param data Data the debited account included in the tx
    * @param operatorData Data the operator included in the tx
@@ -110,7 +110,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @param from The account that will be credited with Pod shares
    * @param collateral The amount of collateral deposited
    * @param drawId The open draw id in which the account deposited
-   * @param data Data the debited account included in the tx
+   * @param data Data the credited account included in the tx
    * @param operatorData Data the operator included in the tx
    */
   event Deposited(address indexed operator, address indexed from, uint256 collateral, uint256 drawId, bytes data, bytes operatorData);
@@ -163,8 +163,12 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
 
   /**
    * @notice Deposits on behalf of a user by an operator.  The operator may also be the user. The deposit will become Pod shares upon the next Pool reward.
+   *
+   * @dev If there is an existing deposit for the open draw, the deposits will be combined.  Otherwise, if there is an existing deposit for the
+   * committed draw then those tokens will be transferred to the user.  We can do so because *we always have the exchange rate for the committed draw*
+   *
    * @param operator The operator who kicked of the deposit
-   * @param from The user on whose half to deposit
+   * @param from The user on whose behalf to deposit
    * @param amount The amount of collateral to deposit
    * @param data Included user data
    * @param operatorData Included operator data
@@ -212,7 +216,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   }
 
   /**
-   * @notice Returns the collateral value of the given users tokens. If the user does not have any tokens, this will be zero.  Pending deposits are not included.
+   * @notice Returns the collateral value of the given user's tokens. If the user does not have any tokens, this will be zero.  Pending deposits are not included.
    * @param user The user whose balance should be checked
    * @return The collateral value of the tokens held by the user.
    */
@@ -226,7 +230,9 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @return The amount of collateral the user has deposited that has not converted to tokens.
    */
   function pendingDeposit(address user) public view returns (uint256) {
-    return scheduledBalances[user].unconsolidatedBalance(pool.currentOpenDrawId());
+    // Balance may not have been consolidated, so make sure the committed balance is removed
+    uint256 committedBalance = scheduledBalances[user].balanceAt(pool.currentCommittedDrawId());
+    return scheduledBalances[user].balanceAt(pool.currentOpenDrawId()).sub(committedBalance);
   }
 
   /**
@@ -273,9 +279,9 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     bytes memory data,
     bytes memory operatorData
   ) internal {
-    uint256 openDrawId = pool.currentOpenDrawId();
-    scheduledSupply.withdrawUnconsolidated(amount, openDrawId);
-    scheduledBalances[from].withdrawUnconsolidated(amount, openDrawId);
+    consolidateBalanceOf(from);
+    scheduledSupply.withdraw(amount);
+    scheduledBalances[from].withdraw(amount);
     pool.withdrawOpenDeposit(amount);
     pool.token().transfer(from, amount);
 
@@ -349,7 +355,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @return The users total balance of tokens.
    */
   function balanceOf(address tokenHolder) public view returns (uint256) {
-    (uint256 balance, uint256 drawId) = scheduledBalances[tokenHolder].consolidatedBalanceInfo(pool.currentOpenDrawId());
+    (uint256 balance, uint256 drawId) = scheduledBalances[tokenHolder].balanceInfoAt(pool.currentCommittedDrawId());
     return super.balanceOf(tokenHolder).add(
       exchangeRateTracker.collateralToTokenValueAt(
         balance,
@@ -363,7 +369,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @return The total supply of tokens.
    */
   function totalSupply() public view returns (uint256) {
-    (uint256 balance, uint256 drawId) = scheduledSupply.consolidatedBalanceInfo(pool.currentOpenDrawId());
+    (uint256 balance, uint256 drawId) = scheduledSupply.balanceInfoAt(pool.currentCommittedDrawId());
     return super.totalSupply().add(
       exchangeRateTracker.collateralToTokenValueAt(
         balance,
@@ -427,6 +433,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
     require(msg.sender == address(pool), "Pod/only-pool");
     uint256 tokens = totalSupply();
     uint256 collateral = exchangeRateTracker.tokenToCollateralValue(tokens).add(winnings);
+    // exchange rate will apply to committed tokens
     uint256 mantissa = exchangeRateTracker.collateralizationChanged(tokens, collateral, drawId.add(1));
     emit CollateralizationChanged(drawId, tokens, collateral, mantissa);
   }
@@ -436,7 +443,7 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @return The current exchange rate mantissa.
    */
   function currentExchangeRateMantissa() external view returns (uint256) {
-    return exchangeRateTracker.currentExchangeRateMantissa();
+    return exchangeRateTracker.currentExchangeRate().mantissa;
   }
 
   /**
@@ -532,11 +539,10 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
    * @dev Mints tokens to the Pod using any consolidated supply, then zeroes out the supply.
    */
   function consolidateSupply() internal {
-    uint256 openDrawId = pool.currentOpenDrawId();
-    (uint256 balance, uint256 drawId) = scheduledSupply.consolidatedBalanceInfo(openDrawId);
+    (uint256 balance, uint256 drawId) = scheduledSupply.balanceInfoAt(pool.currentCommittedDrawId());
     uint256 tokens = exchangeRateTracker.collateralToTokenValueAt(balance, drawId);
     if (tokens > 0) {
-      scheduledSupply.clearConsolidated(openDrawId);
+      scheduledSupply.withdrawAll();
       _mint(address(this), address(this), tokens, "", "");
     }
   }
@@ -544,16 +550,16 @@ contract Pod is ERC777, ReentrancyGuard, IERC777Recipient, IRewardListener {
   /**
    * @notice Ensures any pending shares are minted to the user.
    * @dev First calls `consolidateSupply()`, then transfers tokens from the Pod to the user based
-   * on the users consolidated supply.  Finally, it zeroes out the users consolidated supply.
+   * on the user's consolidated supply.  Finally, it zeroes out the user's consolidated supply.
+   *
    * @param user The user whose balance should be consolidated.
    */
   function consolidateBalanceOf(address user) internal {
     consolidateSupply();
-    uint256 openDrawId = pool.currentOpenDrawId();
-    (uint256 balance, uint256 drawId) = scheduledBalances[user].consolidatedBalanceInfo(openDrawId);
+    (uint256 balance, uint256 drawId) = scheduledBalances[user].balanceInfoAt(pool.currentCommittedDrawId());
     uint256 tokens = exchangeRateTracker.collateralToTokenValueAt(balance, drawId);
     if (tokens > 0) {
-      scheduledBalances[user].clearConsolidated(openDrawId);
+      scheduledBalances[user].withdrawAll();
       _send(address(this), address(this), user, tokens, "", "", true);
     }
   }
