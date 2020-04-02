@@ -10,8 +10,8 @@ If you'd like to deploy Pods and a mock Pool so you can play with them try the [
 
 | Contract      | Address (proxy)   | Address (implementation) |
 | -------       | --------          | ----------- |
-| DaiPod    | [0xc2A8F46b2991F322ce233360Bcf15375EB792223](https://kovan.etherscan.io/address/0xc2A8F46b2991F322ce233360Bcf15375EB792223) | [0xae3C0ca8f3D923301cBcfafEcC1da7D2897cc3F6](https://kovan.etherscan.io/address/0xae3C0ca8f3D923301cBcfafEcC1da7D2897cc3F6) |
-| UsdcPod    | [0xbACF2e665B37F713C159705F59f5349F78858C2d](https://kovan.etherscan.io/address/0xbACF2e665B37F713C159705F59f5349F78858C2d) | [0xA3482AbAaB96Bb93a421bCaED3151401EE36C568](https://kovan.etherscan.io/address/0xA3482AbAaB96Bb93a421bCaED3151401EE36C568) |
+| DaiPod    | [0xc2A8F46b2991F322ce233360Bcf15375EB792223](https://kovan.etherscan.io/address/0xc2A8F46b2991F322ce233360Bcf15375EB792223) | [0xE8309a662C45CEaF5e9f52610B87A03d3A3C4C24](https://kovan.etherscan.io/address/0xE8309a662C45CEaF5e9f52610B87A03d3A3C4C24) |
+| UsdcPod    | [0xbACF2e665B37F713C159705F59f5349F78858C2d](https://kovan.etherscan.io/address/0xbACF2e665B37F713C159705F59f5349F78858C2d) | [0xec6DAc8357245808608aACF97346762468e550A3](https://kovan.etherscan.io/address/0xec6DAc8357245808608aACF97346762468e550A3) |
 
 # Development
 
