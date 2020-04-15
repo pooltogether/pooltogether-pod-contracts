@@ -1,0 +1,624 @@
+{
+  "contracts": {
+    "DaiPod": {
+      "address": "0x23AA976A4413aC655a237Ff01083D62B0C4971e4",
+      "constructorCode": "608060405261518e806100136000396000f3fe",
+      "bodyBytecodeHash": "0a1cf846a2a100e5d8f818b7b9251a641f184cbaedae9359deaf80124c2e67fe",
+      "localBytecodeHash": "6e01eb527803f876ff5eaebd1caca0eba6b79b7be00a69817dded3b61f73969b",
+      "deployedBytecodeHash": "5fb79ce9680fbd6bf96c49c1911873090c6256e0fc077563b57a3815abf4fad7",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_string": {
+          "id": "t_string",
+          "kind": "elementary",
+          "label": "string"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_array:dyn<t_address>": {
+          "id": "t_array:dyn<t_address>",
+          "valueType": "t_address",
+          "length": "dyn",
+          "kind": "array",
+          "label": "address[]"
+        },
+        "t_mapping<t_bool>": {
+          "id": "t_mapping<t_bool>",
+          "valueType": "t_bool",
+          "label": "mapping(key => bool)",
+          "kind": "mapping"
+        },
+        "t_struct<ScheduledBalance.State>": {
+          "id": "t_struct<ScheduledBalance.State>",
+          "kind": "struct",
+          "label": "ScheduledBalance.State",
+          "members": [
+            {
+              "label": "lastDeposit",
+              "astId": 10113,
+              "type": "t_uint256",
+              "src": "1483:19:30"
+            },
+            {
+              "label": "lastTimestamp",
+              "astId": 10115,
+              "type": "t_uint256",
+              "src": "1508:21:30"
+            }
+          ]
+        },
+        "t_mapping<t_struct<ScheduledBalance.State>>": {
+          "id": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "valueType": "t_struct<ScheduledBalance.State>",
+          "label": "mapping(key => ScheduledBalance.State)",
+          "kind": "mapping"
+        },
+        "t_struct<ExchangeRateTracker.State>": {
+          "id": "t_struct<ExchangeRateTracker.State>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.State",
+          "members": [
+            {
+              "label": "exchangeRates",
+              "astId": 8434,
+              "type": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+              "src": "1233:28:27"
+            }
+          ]
+        },
+        "t_struct<ExchangeRateTracker.ExchangeRate>": {
+          "id": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.ExchangeRate",
+          "members": [
+            {
+              "label": "timestamp",
+              "astId": 8428,
+              "type": "t_uint256",
+              "src": "1029:17:27"
+            },
+            {
+              "label": "exchangeRate",
+              "astId": 8430,
+              "type": "t_struct<FixedPoint.Fixed18>",
+              "src": "1052:31:27"
+            }
+          ]
+        },
+        "t_struct<FixedPoint.Fixed18>": {
+          "id": "t_struct<FixedPoint.Fixed18>",
+          "kind": "struct",
+          "label": "FixedPoint.Fixed18",
+          "members": [
+            {
+              "label": "mantissa",
+              "astId": 8740,
+              "type": "t_uint256",
+              "src": "1234:16:28"
+            }
+          ]
+        },
+        "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>": {
+          "id": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+          "valueType": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "length": "dyn",
+          "kind": "array",
+          "label": "ExchangeRateTracker.ExchangeRate[]"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 2993,
+          "type": "t_bool",
+          "src": "757:24:14"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 2995,
+          "type": "t_bool",
+          "src": "876:25:14"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 3057,
+          "type": "t_array:50<t_uint256>",
+          "src": "1982:29:14"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_balances",
+          "astId": 1733,
+          "type": "t_mapping<t_uint256>",
+          "src": "1328:45:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_totalSupply",
+          "astId": 1735,
+          "type": "t_uint256",
+          "src": "1380:28:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_name",
+          "astId": 1737,
+          "type": "t_string",
+          "src": "1415:20:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_symbol",
+          "astId": 1739,
+          "type": "t_string",
+          "src": "1441:22:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_defaultOperatorsArray",
+          "astId": 1748,
+          "type": "t_array:dyn<t_address>",
+          "src": "2089:40:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_defaultOperators",
+          "astId": 1752,
+          "type": "t_mapping<t_bool>",
+          "src": "2223:50:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_operators",
+          "astId": 1758,
+          "type": "t_mapping<t_bool>",
+          "src": "2363:63:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_revokedDefaultOperators",
+          "astId": 1764,
+          "type": "t_mapping<t_bool>",
+          "src": "2432:77:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_allowances",
+          "astId": 1770,
+          "type": "t_mapping<t_uint256>",
+          "src": "2540:69:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "______gap",
+          "astId": 2691,
+          "type": "t_array:50<t_uint256>",
+          "src": "16391:29:8"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "_guardCounter",
+          "astId": 2955,
+          "type": "t_uint256",
+          "src": "733:29:13"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "______gap",
+          "astId": 2988,
+          "type": "t_array:50<t_uint256>",
+          "src": "1563:29:13"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledSupply",
+          "astId": 8944,
+          "type": "t_struct<ScheduledBalance.State>",
+          "src": "5815:47:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledBalances",
+          "astId": 8948,
+          "type": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "src": "5952:69:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "exchangeRateTracker",
+          "astId": 8950,
+          "type": "t_struct<ExchangeRateTracker.State>",
+          "src": "6074:54:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "pool",
+          "astId": 8952,
+          "type": "t_address",
+          "src": "6195:24:29"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    },
+    "UsdcPod": {
+      "address": "0xec6DAc8357245808608aACF97346762468e550A3",
+      "constructorCode": "608060405261518e806100136000396000f3fe",
+      "bodyBytecodeHash": "0a1cf846a2a100e5d8f818b7b9251a641f184cbaedae9359deaf80124c2e67fe",
+      "localBytecodeHash": "6e01eb527803f876ff5eaebd1caca0eba6b79b7be00a69817dded3b61f73969b",
+      "deployedBytecodeHash": "5fb79ce9680fbd6bf96c49c1911873090c6256e0fc077563b57a3815abf4fad7",
+      "types": {
+        "t_bool": {
+          "id": "t_bool",
+          "kind": "elementary",
+          "label": "bool"
+        },
+        "t_uint256": {
+          "id": "t_uint256",
+          "kind": "elementary",
+          "label": "uint256"
+        },
+        "t_array:50<t_uint256>": {
+          "id": "t_array:50<t_uint256>",
+          "valueType": "t_uint256",
+          "length": "50",
+          "kind": "array",
+          "label": "uint256[50]"
+        },
+        "t_mapping<t_uint256>": {
+          "id": "t_mapping<t_uint256>",
+          "valueType": "t_uint256",
+          "label": "mapping(key => uint256)",
+          "kind": "mapping"
+        },
+        "t_string": {
+          "id": "t_string",
+          "kind": "elementary",
+          "label": "string"
+        },
+        "t_address": {
+          "id": "t_address",
+          "kind": "elementary",
+          "label": "address"
+        },
+        "t_array:dyn<t_address>": {
+          "id": "t_array:dyn<t_address>",
+          "valueType": "t_address",
+          "length": "dyn",
+          "kind": "array",
+          "label": "address[]"
+        },
+        "t_mapping<t_bool>": {
+          "id": "t_mapping<t_bool>",
+          "valueType": "t_bool",
+          "label": "mapping(key => bool)",
+          "kind": "mapping"
+        },
+        "t_struct<ScheduledBalance.State>": {
+          "id": "t_struct<ScheduledBalance.State>",
+          "kind": "struct",
+          "label": "ScheduledBalance.State",
+          "members": [
+            {
+              "label": "lastDeposit",
+              "astId": 10113,
+              "type": "t_uint256",
+              "src": "1483:19:30"
+            },
+            {
+              "label": "lastTimestamp",
+              "astId": 10115,
+              "type": "t_uint256",
+              "src": "1508:21:30"
+            }
+          ]
+        },
+        "t_mapping<t_struct<ScheduledBalance.State>>": {
+          "id": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "valueType": "t_struct<ScheduledBalance.State>",
+          "label": "mapping(key => ScheduledBalance.State)",
+          "kind": "mapping"
+        },
+        "t_struct<ExchangeRateTracker.State>": {
+          "id": "t_struct<ExchangeRateTracker.State>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.State",
+          "members": [
+            {
+              "label": "exchangeRates",
+              "astId": 8434,
+              "type": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+              "src": "1233:28:27"
+            }
+          ]
+        },
+        "t_struct<ExchangeRateTracker.ExchangeRate>": {
+          "id": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "kind": "struct",
+          "label": "ExchangeRateTracker.ExchangeRate",
+          "members": [
+            {
+              "label": "timestamp",
+              "astId": 8428,
+              "type": "t_uint256",
+              "src": "1029:17:27"
+            },
+            {
+              "label": "exchangeRate",
+              "astId": 8430,
+              "type": "t_struct<FixedPoint.Fixed18>",
+              "src": "1052:31:27"
+            }
+          ]
+        },
+        "t_struct<FixedPoint.Fixed18>": {
+          "id": "t_struct<FixedPoint.Fixed18>",
+          "kind": "struct",
+          "label": "FixedPoint.Fixed18",
+          "members": [
+            {
+              "label": "mantissa",
+              "astId": 8740,
+              "type": "t_uint256",
+              "src": "1234:16:28"
+            }
+          ]
+        },
+        "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>": {
+          "id": "t_array:dyn<t_struct<ExchangeRateTracker.ExchangeRate>>",
+          "valueType": "t_struct<ExchangeRateTracker.ExchangeRate>",
+          "length": "dyn",
+          "kind": "array",
+          "label": "ExchangeRateTracker.ExchangeRate[]"
+        }
+      },
+      "storage": [
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initialized",
+          "astId": 2993,
+          "type": "t_bool",
+          "src": "757:24:14"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "initializing",
+          "astId": 2995,
+          "type": "t_bool",
+          "src": "876:25:14"
+        },
+        {
+          "contract": "Initializable",
+          "path": "@openzeppelin/upgrades/contracts/Initializable.sol",
+          "label": "______gap",
+          "astId": 3057,
+          "type": "t_array:50<t_uint256>",
+          "src": "1982:29:14"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_balances",
+          "astId": 1733,
+          "type": "t_mapping<t_uint256>",
+          "src": "1328:45:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_totalSupply",
+          "astId": 1735,
+          "type": "t_uint256",
+          "src": "1380:28:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_name",
+          "astId": 1737,
+          "type": "t_string",
+          "src": "1415:20:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_symbol",
+          "astId": 1739,
+          "type": "t_string",
+          "src": "1441:22:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_defaultOperatorsArray",
+          "astId": 1748,
+          "type": "t_array:dyn<t_address>",
+          "src": "2089:40:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_defaultOperators",
+          "astId": 1752,
+          "type": "t_mapping<t_bool>",
+          "src": "2223:50:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_operators",
+          "astId": 1758,
+          "type": "t_mapping<t_bool>",
+          "src": "2363:63:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_revokedDefaultOperators",
+          "astId": 1764,
+          "type": "t_mapping<t_bool>",
+          "src": "2432:77:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "_allowances",
+          "astId": 1770,
+          "type": "t_mapping<t_uint256>",
+          "src": "2540:69:8"
+        },
+        {
+          "contract": "ERC777",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol",
+          "label": "______gap",
+          "astId": 2691,
+          "type": "t_array:50<t_uint256>",
+          "src": "16391:29:8"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "_guardCounter",
+          "astId": 2955,
+          "type": "t_uint256",
+          "src": "733:29:13"
+        },
+        {
+          "contract": "ReentrancyGuard",
+          "path": "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol",
+          "label": "______gap",
+          "astId": 2988,
+          "type": "t_array:50<t_uint256>",
+          "src": "1563:29:13"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledSupply",
+          "astId": 8944,
+          "type": "t_struct<ScheduledBalance.State>",
+          "src": "5815:47:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "scheduledBalances",
+          "astId": 8948,
+          "type": "t_mapping<t_struct<ScheduledBalance.State>>",
+          "src": "5952:69:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "exchangeRateTracker",
+          "astId": 8950,
+          "type": "t_struct<ExchangeRateTracker.State>",
+          "src": "6074:54:29"
+        },
+        {
+          "contract": "Pod",
+          "path": "contracts/Pod.sol",
+          "label": "pool",
+          "astId": 8952,
+          "type": "t_address",
+          "src": "6195:24:29"
+        }
+      ],
+      "warnings": {
+        "hasConstructor": false,
+        "hasSelfDestruct": false,
+        "hasDelegateCall": false,
+        "hasInitialValuesInDeclarations": false,
+        "uninitializedBaseContracts": []
+      }
+    }
+  },
+  "solidityLibs": {
+    "FixedPoint": {
+      "address": "0xa3a551e9987253b13aF5097e8748b0aE8E8b9AFA",
+      "constructorCode": "610340610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe",
+      "bodyBytecodeHash": "e4127e06980b9be7d1bdef99f0a9081ad5f1e1060ff3ffe866cb010c780879ee",
+      "localBytecodeHash": "0bbd5c9321889cbdfc6d818730a8587f791701e255f35fcebfeeb63f7dd076f5",
+      "deployedBytecodeHash": "0bbd5c9321889cbdfc6d818730a8587f791701e255f35fcebfeeb63f7dd076f5"
+    }
+  },
+  "proxies": {
+    "pooltogether-pods/DaiPod": [
+      {
+        "address": "0x9F4C5D8d9BE360DF36E67F52aE55C1B137B4d0C4",
+        "version": "0.2",
+        "implementation": "0x23AA976A4413aC655a237Ff01083D62B0C4971e4",
+        "admin": "0xE8309a662C45CEaF5e9f52610B87A03d3A3C4C24",
+        "kind": "Upgradeable"
+      }
+    ],
+    "pooltogether-pods/UsdcPod": [
+      {
+        "address": "0x6F5587E191C8b222F634C78111F97c4851663ba4",
+        "version": "0.2",
+        "implementation": "0xec6DAc8357245808608aACF97346762468e550A3",
+        "admin": "0xE8309a662C45CEaF5e9f52610B87A03d3A3C4C24",
+        "kind": "Upgradeable"
+      }
+    ]
+  },
+  "manifestVersion": "2.2",
+  "version": "0.2",
+  "proxyAdmin": {
+    "address": "0xE8309a662C45CEaF5e9f52610B87A03d3A3C4C24"
+  }
+}
