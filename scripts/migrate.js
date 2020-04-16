@@ -10,14 +10,14 @@ async function migrate(context, ozNetworkName, ozOptions = '') {
   const migration = await project.migrationForNetwork(ozNetworkName)
 
   let poolDai, poolUsdc
-  if (ozNetworkName === 'mainnet') {
+  if (ozNetworkName === 'mainnet' || ozNetworkName === 'mainnet_fork') {
     poolDai = '0x29fe7D60DdF151E5b52e5FAB4f1325da6b2bD958'
     poolUsdc = '0x0034Ea9808E620A0EF79261c51AF20614B742B24'
   } else if (ozNetworkName === 'kovan') { //assume mainnet
     poolDai = '0xC3a62C8Af55c59642071bC171Ebd05Eb2479B663'
     poolUsdc = '0xb073a5a16025c91ae3e9764E5cc5fC4DD2fA99Bc'
   } else {
-    throw new Error('Unknown network')
+    throw new Error(`Unknown network: ${ozNetworkName}`)
   }
 
   runShell(`oz session ${ozOptions} --network ${ozNetworkName} --from ${process.env.ADMIN_ADDRESS} --expires 3600 --timeout 600`)

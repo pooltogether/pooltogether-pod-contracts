@@ -3,6 +3,7 @@ const chalk = require('chalk')
 const { buildContext } = require('oz-console')
 const commander = require('commander');
 const { migrate } = require('./migrate')
+const { runShell } = require('./runShell')
 
 const program = new commander.Command()
 program.option('-n --network [network]', 'select the network.', 'local')
@@ -15,6 +16,18 @@ let consoleNetwork, networkConfig, ozNetworkName
 console.log(program.network)
 
 switch (program.network) {
+  case 'mainnet_fork':
+    // runShell(`cp .openzeppelin/mainnet.json .openzeppelin/dev-999.json`)
+    // runShell(`cp .oz-migrate/mainnet .oz-migrate/mainnet_fork`)
+    // The network that the oz-console app should talk to.  (should really just use the ozNetworkName)
+    consoleNetwork = process.env.LOCALHOST_URL
+
+    // The OpenZeppelin SDK network name
+    ozNetworkName = 'mainnet_fork'
+
+    // The OpenZeppelin SDK network config that oz-console should use as reference
+    networkConfig = '.openzeppelin/dev-999.json'
+    break
   case 'mainnet':
     // The network that the oz-console app should talk to.  (should really just use the ozNetworkName)
     consoleNetwork = 'mainnet'
