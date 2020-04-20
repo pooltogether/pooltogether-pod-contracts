@@ -15,7 +15,7 @@ async function migrate(context, ozNetworkName, ozOptions = '') {
     poolUsdc = '0x0034Ea9808E620A0EF79261c51AF20614B742B24'
   } else if (ozNetworkName === 'kovan') { //assume mainnet
     poolDai = '0xC3a62C8Af55c59642071bC171Ebd05Eb2479B663'
-    poolUsdc = '0xb073a5a16025c91ae3e9764E5cc5fC4DD2fA99Bc'
+    poolUsdc = '0xa0B2A98d0B769886ec06562ee9bB3572Fa4f3aAb'
   } else {
     throw new Error(`Unknown network: ${ozNetworkName}`)
   }
