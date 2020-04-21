@@ -2,6 +2,13 @@
 # yarn lockfile v1
 
 
+"@deltacamp/kleros@DeltaCamp/kleros#ca7fbdcc195cfd1267efb99aae905c3400a5ea5f":
+  version "0.0.7"
+  resolved "https://codeload.github.com/DeltaCamp/kleros/tar.gz/ca7fbdcc195cfd1267efb99aae905c3400a5ea5f"
+  dependencies:
+    "@kleros/kleros-interaction" "^0.9.0"
+    minimetoken "^0.2.0"
+
 "@firebase/app-types@0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@firebase/app-types/-/app-types-0.4.3.tgz#80d2b6e5ee43ac99892329ab02301ee7ed82da45"
@@ -190,13 +197,6 @@
     minimetoken "^0.2.0"
     openzeppelin-solidity "^1.12.0"
     web3-utils "^1.2.1"
-
-"@kleros/kleros@DeltaCamp/kleros#ca7fbdcc195cfd1267efb99aae905c3400a5ea5f":
-  version "0.0.7"
-  resolved "https://codeload.github.com/DeltaCamp/kleros/tar.gz/ca7fbdcc195cfd1267efb99aae905c3400a5ea5f"
-  dependencies:
-    "@kleros/kleros-interaction" "^0.9.0"
-    minimetoken "^0.2.0"
 
 "@kleros/kleros@^0.1.2":
   version "0.1.3"
@@ -480,12 +480,12 @@
   dependencies:
     mkdirp "^0.5.0"
 
-"@pooltogether/pooltogether-contracts@^0.2.11":
-  version "0.2.11"
-  resolved "https://registry.yarnpkg.com/@pooltogether/pooltogether-contracts/-/pooltogether-contracts-0.2.11.tgz#17a0be67da04b348680491961248e338bfe87811"
-  integrity sha512-CDJo5PN2tGFjQ8md2CX0GHCTJL6FQL8I9sjBDawp4YMG848Lt7MmzPc3GHaiWoNAGSWEI989Eld99ZliYJxwYw==
+"@pooltogether/pooltogether-contracts@^0.2.12":
+  version "0.2.12"
+  resolved "https://registry.yarnpkg.com/@pooltogether/pooltogether-contracts/-/pooltogether-contracts-0.2.12.tgz#9006386ed83b6229be68bc638c6c7bb6629b5894"
+  integrity sha512-PD8MbN9TvT9QKqqT4MAdVVSlGDXTLGj8IinJKLiybDL+rMgR5ZqhL7KpmDXQ60zhpgL5UXcHFYx3+fTPVDzTAg==
   dependencies:
-    "@kleros/kleros" DeltaCamp/kleros#ca7fbdcc195cfd1267efb99aae905c3400a5ea5f
+    "@deltacamp/kleros" DeltaCamp/kleros#ca7fbdcc195cfd1267efb99aae905c3400a5ea5f
     "@openzeppelin/contracts-ethereum-package" "2.4.0"
     "@openzeppelin/upgrades" "2.5.1"
     fixidity DeltaCamp/Fixidity#edf533f77df43b16a7b92f17af7a8930db01f293

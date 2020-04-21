@@ -1,6 +1,6 @@
 {
   "name": "@pooltogether/pods",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "PoolTogether Pods: combine your tickets together for a better chance to win!",
   "main": "index.js",
   "homepage": "https://github.com/pooltogether/pods",
@@ -39,7 +39,7 @@
   "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "openzeppelin/openzeppelin-contracts-ethereum-package#c5fa02f0c502d9d28bdec601637fc548834c86c5",
     "@openzeppelin/upgrades": "^2.7.1",
-    "@pooltogether/pooltogether-contracts": "^0.2.11"
+    "@pooltogether/pooltogether-contracts": "^0.2.12"
   },
   "devDependencies": {
     "@openzeppelin/cli": "2.6.0",
