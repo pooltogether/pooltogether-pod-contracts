@@ -1,14 +1,13 @@
 {
-  "name": "@pooltogether/pt-pod-factory",
-  "version": "0.0.1",
-  "description": "PoolTogether Pod Factory",
+  "name": "@pooltogether/pods",
+  "version": "3.0.2",
+  "description": "PoolTogether Pods Factory",
   "main": "index.js",
   "scripts": {
     "test": "buidler test",
     "compile": "buidler compile",
     "start": "buidler node --port $LOCAL_BUIDLEREVM_PORT",
     "coverage": "rm -rf build cache && buidler compile && buidler coverage --network coverage --temp build",
-    "coveralls": "cat coverage/lcov.info | coveralls",
     "gas": "REPORT_GAS=true buidler test --network local",
     "console-kovan": "oz-console -n kovan",
     "session-kovan": "oz session --network kovan --from $ADMIN_ADDRESS --expires 3600 --timeout 600 --blockTimeout 50",
