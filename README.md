@@ -1,6 +1,6 @@
 # PoolTogether Pod-Factory Contracts
 
-[![Coverage Status](https://coveralls.io/repos/github/pooltogether/pt-pod-factory/badge.svg?branch=version-3)](https://coveralls.io/github/pooltogether/pt-pod-factory?branch=version-3)
+[![Coverage Status](https://coveralls.io/repos/github/pooltogether/pt-pod-factory/badge.svg?branch=master)](https://coveralls.io/github/pooltogether/pt-pod-factory?branch=master)
 [![built-with openzeppelin](https://img.shields.io/badge/built%20with-OpenZeppelin-3677FF)](https://docs.openzeppelin.com/)
 
 
