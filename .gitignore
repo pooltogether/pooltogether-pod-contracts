@@ -1,22 +1,18 @@
-node_modules*
-.ganache
+#Builder files
+cache
+artifacts
 .history
 build
-networks/*
-.DS_Store
-.openzeppelin/.lock
-yarn-error.log
-.envrc
-zos.dev*.json
-.zos.session
-.zos.lock
-.openzeppelin/.session
-.openzeppelin/dev-*.json
-.oz-migrate/mainnet_fork
-.oz-migrate/local
+node_modules
+dist
 coverage
 coverage.json
-test-results.xml
+.envrc
+.openzeppelin/dev-*
+.openzeppelin/.session
+.oz-migrate/dev-*
 abis
-junit
-.ganache-fork
+
+#Workspace files
+*.code-Workspace
+.DS_Store
