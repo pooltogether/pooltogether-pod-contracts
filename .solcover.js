@@ -1,7 +1,6 @@
 module.exports = {
+  mocha: { reporter: 'mocha-junit-reporter' },
   skipFiles: [
-    "test/ExposedExchangeRateTracker.sol",
-    "test/ExposedScheduledBalance.sol",
-    "test/ImportContracts.sol"
+    "test/ERC20Mintable.sol"
   ]
 };

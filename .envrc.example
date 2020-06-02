@@ -1,4 +1,8 @@
-export HDWALLET_MNEMONIC="front ski wolf horse woman mushroom frown fold vacuum alert total sugar"
-export INFURA_PROVIDER_URL_MAINNET=https://mainnet.infura.io/v3/< your api key >
-export INFURA_PROVIDER_URL_KOVAN=https://kovan.infura.io/v3/< your api key>
-export ADMIN_ADDRESS=0x51f595ef681c3b3b6b6949fbbb36b7d98daa15bf
+export HDWALLET_MNEMONIC=
+export ADMIN_ADDRESS=
+export LOCAL_ADMIN_ADDRESS=
+export LOCAL_ADMIN_ADDRESS_2=
+export INFURA_PROVIDER_URL_KOVAN=
+export LOCAL_BUIDLEREVM_PORT=8545
+export COINMARKETCAP_API_KEY=
+
