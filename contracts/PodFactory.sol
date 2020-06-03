@@ -3,8 +3,8 @@ pragma solidity ^0.6.4;
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@pooltogether/pooltogether-contracts/contracts/external/openzeppelin/ProxyFactory.sol";
 
-import "./PodSponsorFactory.sol";
-import "./PodSponsor.sol";
+import "./PodSponsorshipFactory.sol";
+import "./PodSponsorship.sol";
 import "./Pod.sol";
 
 contract PodFactory is Initializable, ProxyFactory {
@@ -42,7 +42,7 @@ contract PodFactory is Initializable, ProxyFactory {
         Pod pod = Pod(deployMinimal(address(podTemplate), ""));
 
         // Create Pod-Sponsorship Token for this specific Pod
-        PodSponsor podSponsorToken = PodSponsorFactory(_podSponsorFactory).createSponsorship("Pod-Sponsor", "PSPON", _trustedForwarder, address(pod));
+        PodSponsorship podSponsorToken = PodSponsorshipFactory(_podSponsorFactory).createSponsorship("Pod-Sponsor", "PSPON", _trustedForwarder, address(pod));
 
         // Initialize new Pod and link the Sponsorship Token
         pod.initialize(_name, _symbol, _trustedForwarder, _prizePoolManager, address(podSponsorToken));

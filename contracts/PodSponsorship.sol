@@ -16,7 +16,7 @@ import "@pooltogether/pooltogether-contracts/contracts/modules/timelock/Timelock
 import "@pooltogether/pooltogether-contracts/contracts/Constants.sol";
 
 
-contract PodSponsor is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, BaseRelayRecipient {
+contract PodSponsorship is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, BaseRelayRecipient {
     using SafeMath for uint256;
 
     event SponsorshipMinted(address indexed pod, address indexed to, uint256 amount);
@@ -28,7 +28,7 @@ contract PodSponsor is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeS
     address public sponsoredPod;
 
     modifier onlyPod() {
-      require(_msgSender() == sponsoredPod, "PodSponsor: only pod");
+      require(_msgSender() == sponsoredPod, "PodSponsorship: only pod");
       _;
     }
 

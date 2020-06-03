@@ -2,20 +2,20 @@ pragma solidity ^0.6.4;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@pooltogether/pooltogether-contracts/contracts/external/openzeppelin/ProxyFactory.sol";
-import "./PodSponsor.sol";
+import "./PodSponsorship.sol";
 
-contract PodSponsorFactory is Initializable, ProxyFactory {
+contract PodSponsorshipFactory is Initializable, ProxyFactory {
 
-    PodSponsor internal sponsorshipTemplate;
+    PodSponsorship internal sponsorshipTemplate;
 
-    event PodSponsorCreated(address indexed token, address indexed pod);
+    event PodSponsorshipCreated(address indexed token, address indexed pod);
 
     /// @dev Initializes the Sponsorship-Factory and creates the Sponsorship-Template
     function initialize() 
         public 
         initializer 
     {
-        sponsorshipTemplate = new PodSponsor();
+        sponsorshipTemplate = new PodSponsorship();
     }
 
     /// @notice Creates a new Sponsorship Token
@@ -31,14 +31,14 @@ contract PodSponsorFactory is Initializable, ProxyFactory {
         address _pod
     ) 
         public 
-        returns (PodSponsor) 
+        returns (PodSponsorship) 
     {
         // Create Sponsorship Token from Template
-        PodSponsor token = PodSponsor(deployMinimal(address(sponsorshipTemplate), ""));
+        PodSponsorship token = PodSponsorship(deployMinimal(address(sponsorshipTemplate), ""));
         token.initialize(_name, _symbol, _trustedForwarder, _pod);
 
         // Log Creation Event
-        emit PodSponsorCreated(address(token), _pod);
+        emit PodSponsorshipCreated(address(token), _pod);
         
         return sponsorshipTemplate;
     }

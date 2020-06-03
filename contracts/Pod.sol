@@ -15,7 +15,7 @@ import "@pooltogether/pooltogether-contracts/contracts/modules/ticket/Ticket.sol
 import "@pooltogether/pooltogether-contracts/contracts/modules/timelock/Timelock.sol";
 import "@pooltogether/pooltogether-contracts/contracts/Constants.sol";
 
-import "./PodSponsor.sol";
+import "./PodSponsorship.sol";
 
 contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, BaseRelayRecipient {
     using SafeMath for uint256;
@@ -160,7 +160,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         _ticket.mintTickets(_amount);
 
         // Mint Sponsorship Tokens equal to Amount of Collateral supplied
-        PodSponsor(podSponsorToken).mint(_sender, _amount);
+        PodSponsorship(podSponsorToken).mint(_sender, _amount);
 
         // Log event
         emit PodSponsored(_sender, _amount);
@@ -168,14 +168,14 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
     function redeemSponsorship(uint256 _amount) external nonReentrant {
         address _sender = _msgSender();
-        uint256 _balance = PodSponsor(podSponsorToken).balanceOf(_sender);
+        uint256 _balance = PodSponsorship(podSponsorToken).balanceOf(_sender);
         require(_balance >= _amount, "Pod: Insufficient sponsorship balance");
 
         // Redeem Sponsorship Tokens for Assets
         uint256 _assets = ticket().redeemTicketsInstantly(_amount);
 
         // Burn the Sponsorship Tokens
-        PodSponsor(podSponsorToken).burn(_sender, _amount);
+        PodSponsorship(podSponsorToken).burn(_sender, _amount);
 
         // Transfer Redeemed Assets to Caller
         yieldService().token().transfer(_sender, _assets);
