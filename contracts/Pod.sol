@@ -15,6 +15,7 @@ import "@pooltogether/pooltogether-contracts/contracts/modules/ticket/Ticket.sol
 import "@pooltogether/pooltogether-contracts/contracts/modules/timelock/Timelock.sol";
 import "@pooltogether/pooltogether-contracts/contracts/Constants.sol";
 
+import "./PodSponsor.sol";
 
 contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, BaseRelayRecipient {
     using SafeMath for uint256;
@@ -22,11 +23,14 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     event PodDeposit(address indexed from, uint256 amount, uint256 shares);
     event PodRedeemed(address indexed to, uint256 amount, uint256 shares, uint256 tickets);
     event PodRedeemedWithTimelock(address indexed to, uint256 timestamp, uint256 amountRedeemed, uint256 shares, uint256 tickets);
+    event PodSponsored(address indexed from, uint256 amount);
+    event PodSponsorRedeemed(address indexed to, uint256 amount, uint256 assets);
 
     uint256 internal constant INITIAL_EXCHANGE_RATE_MANTISSA = 1 ether;
 
     // Module-Manager for the Prize Pool
     address public prizePoolManager;
+    address public podSponsorToken;
 
     // Timelocked Tokens
     mapping (address => uint256) internal timelockBalance;
@@ -40,7 +44,8 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
-        address _prizePoolManager
+        address _prizePoolManager,
+        address _podSponsorToken
     ) 
         public 
         initializer 
@@ -50,6 +55,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         __ERC777_init(_name, _symbol, _defaultOperators);
         trustedForwarder = _trustedForwarder;
         prizePoolManager = _prizePoolManager;
+        podSponsorToken = _podSponsorToken;
     }
 
     //
@@ -141,6 +147,42 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         return _assetsRedeemed;
     }
 
+    function sponsor(uint256 _amount) external nonReentrant {
+        address _sender = _msgSender();
+        Ticket _ticket = ticket();
+        IERC20 _assetToken = yieldService().token();
+
+        // Collect collateral from caller
+        _assetToken.transferFrom(_sender, address(this), _amount);
+
+        // Transfer collateral to Prize Pool for Tickets without Pod-Shares
+        _assetToken.approve(address(_ticket), _amount);
+        _ticket.mintTickets(_amount);
+
+        // Mint Sponsorship Tokens equal to Amount of Collateral supplied
+        PodSponsor(podSponsorToken).mint(_sender, _amount);
+
+        // Log event
+        emit PodSponsored(_sender, _amount);
+    }
+
+    function redeemSponsorship(uint256 _amount) external nonReentrant {
+        address _sender = _msgSender();
+        uint256 _balance = PodSponsor(podSponsorToken).balanceOf(_sender);
+        require(_balance >= _amount, "Pod: Insufficient sponsorship balance");
+
+        // Redeem Sponsorship Tokens for Assets
+        uint256 _assets = ticket().redeemTicketsInstantly(_amount);
+
+        // Burn the Sponsorship Tokens
+        PodSponsor(podSponsorToken).burn(_sender, _amount);
+
+        // Transfer Redeemed Assets to Caller
+        yieldService().token().transfer(_sender, _assets);
+
+        // Log event
+        emit PodSponsorRedeemed(_sender, _amount, _assets);
+    }
 
     function sweepForUser(address _user) public returns (uint256) {
         IERC20 _assetToken = yieldService().token();

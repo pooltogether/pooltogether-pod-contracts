@@ -15,6 +15,7 @@ const CompoundYieldService = require('@pooltogether/pooltogether-contracts/build
 const ERC20Mintable = require('@pooltogether/pooltogether-contracts/build/ERC20Mintable.json')
 
 const Pod = require('../build/Pod.json')
+const PodSponsor = require('../build/PodSponsor.json')
 
 const toWei = ethers.utils.parseEther
 const toEther = ethers.utils.formatEther
@@ -47,6 +48,7 @@ describe('Pod Contract', function() {
         name      : 'Pod',
         symbol    : 'POD',
         forwarder : '0x1337c0d31337c0D31337C0d31337c0d31337C0d3',
+        sponsorToken: '',
     };
 
     const _findLog = (receipt, eventName) => {
@@ -63,21 +65,25 @@ describe('Pod Contract', function() {
         registry = await deploy1820(wallet)
         MGR.address = manager.address;
     
-        debug('deploying periodic prize pool...')
+        debug('mocking PeriodicPrizePool...')
         prizePool = await deployMockModule(wallet, manager, PeriodicPrizePool.abi, Constants.PRIZE_POOL_INTERFACE_HASH)
     
-        debug('deploying yieldService...')
+        debug('mocking CompoundYieldService...')
         yieldService = await deployMockModule(wallet, manager, CompoundYieldService.abi, Constants.YIELD_SERVICE_INTERFACE_HASH)
     
-        debug('deploying timelock...')
+        debug('mocking Timelock...')
         timelock = await deployMockModule(wallet, manager, Timelock.abi, Constants.TIMELOCK_INTERFACE_HASH)
     
-        debug('deploying token...')
+        debug('mocking ERC20Mintable...')
         token = await deployMockContract(wallet, ERC20Mintable.abi, txOverrides)
     
-        debug('deploying ticket...')
+        debug('mocking Ticket...')
         ticket = await deployMockModule(wallet, manager, Ticket.abi, Constants.TICKET_INTERFACE_HASH)
 
+        debug('mocking PodSponsor...')
+        sponsor = await deployMockContract(wallet, PodSponsor.abi, txOverrides)
+        POD.sponsorToken = sponsor.address
+    
         debug('mocking return values...')
         await yieldService.mock.token.returns(token.address)
         await token.mock.transferFrom.returns(true)
@@ -89,7 +95,7 @@ describe('Pod Contract', function() {
         pod = await deployContract(wallet, Pod, [], txOverrides)
 
         debug('initializing Pod...')
-        await pod.initialize(POD.name, POD.symbol, POD.forwarder, MGR.address)
+        await pod.initialize(POD.name, POD.symbol, POD.forwarder, MGR.address, POD.sponsorToken)
     })
 
     describe('prizePool()', function() {
