@@ -19,11 +19,6 @@ import "@pooltogether/pooltogether-contracts/contracts/Constants.sol";
 contract PodSponsorship is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, BaseRelayRecipient {
     using SafeMath for uint256;
 
-    event SponsorshipMinted(address indexed pod, address indexed to, uint256 amount);
-    event SponsorshipBurned(address indexed pod, address indexed from, uint256 amount);
-
-    uint256 internal constant INITIAL_EXCHANGE_RATE_MANTISSA = 1 ether;
-
     // Address of the Sponsored Pod
     address public sponsoredPod;
 

@@ -10,15 +10,19 @@ import "./Pod.sol";
 contract PodFactory is Initializable, ProxyFactory {
 
     Pod internal podTemplate;
+    PodSponsorshipFactory internal sponsorshipFactory;
 
     event PodCreated(address indexed podAddress, address indexed prizePoolManager);
 
     /// @dev Initializes the Pod-Factory and creates the Pod-Template
-    function initialize() 
+    function initialize(
+        address _podSponsorFactory
+    ) 
         public 
         initializer 
     {
         podTemplate = new Pod();
+        sponsorshipFactory = PodSponsorshipFactory(_podSponsorFactory);
     }
 
     /// @notice Creates a new Pod
@@ -26,14 +30,12 @@ contract PodFactory is Initializable, ProxyFactory {
     /// @param _symbol The Symbol for the Pod
     /// @param _trustedForwarder The Trusted-Forwarder for Meta-Txs
     /// @param _prizePoolManager  The address to the Prize Pool Manager Contract
-    /// @param _podSponsorFactory  The address to the Pod-Sponsorship Token Factory
     /// @return The address of the newly created Pod
     function createPod(
         string memory _name,
         string memory _symbol,
         address _trustedForwarder,
-        address _prizePoolManager,
-        address _podSponsorFactory
+        address _prizePoolManager
     ) 
         public 
         returns (Pod) 
@@ -42,7 +44,7 @@ contract PodFactory is Initializable, ProxyFactory {
         Pod pod = Pod(deployMinimal(address(podTemplate), ""));
 
         // Create Pod-Sponsorship Token for this specific Pod
-        PodSponsorship podSponsorToken = PodSponsorshipFactory(_podSponsorFactory).createSponsorship("Pod-Sponsor", "PSPON", _trustedForwarder, address(pod));
+        PodSponsorship podSponsorToken = sponsorshipFactory.createSponsorship("Pod-Sponsor", "PSPON", _trustedForwarder, address(pod));
 
         // Initialize new Pod and link the Sponsorship Token
         pod.initialize(_name, _symbol, _trustedForwarder, _prizePoolManager, address(podSponsorToken));

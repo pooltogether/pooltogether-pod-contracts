@@ -8,8 +8,6 @@ contract PodSponsorshipFactory is Initializable, ProxyFactory {
 
     PodSponsorship internal sponsorshipTemplate;
 
-    event PodSponsorshipCreated(address indexed token, address indexed pod);
-
     /// @dev Initializes the Sponsorship-Factory and creates the Sponsorship-Template
     function initialize() 
         public 
@@ -36,10 +34,6 @@ contract PodSponsorshipFactory is Initializable, ProxyFactory {
         // Create Sponsorship Token from Template
         PodSponsorship token = PodSponsorship(deployMinimal(address(sponsorshipTemplate), ""));
         token.initialize(_name, _symbol, _trustedForwarder, _pod);
-
-        // Log Creation Event
-        emit PodSponsorshipCreated(address(token), _pod);
-        
         return sponsorshipTemplate;
     }
 }
