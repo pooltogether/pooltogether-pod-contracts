@@ -1,8 +1,17 @@
-const { usePlugin } = require("@nomiclabs/buidler/config");
+const { usePlugin, task } = require("@nomiclabs/buidler/config");
 usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("buidler-gas-reporter");
 usePlugin("solidity-coverage");
 usePlugin("@nomiclabs/buidler-etherscan");
+
+// Fix for Compiler Error; InternalCompilerError: Metadata too large.
+// reference: https://github.com/sc-forks/solidity-coverage/issues/497#issuecomment-616727092
+const {TASK_COMPILE_GET_COMPILER_INPUT} = require("@nomiclabs/buidler/builtin-tasks/task-names");
+task(TASK_COMPILE_GET_COMPILER_INPUT).setAction(async (_, __, runSuper) => {
+  const input = await runSuper()
+  input.settings.metadata.useLiteralContent = false
+  return input
+})
 
 module.exports = {
   solc: {

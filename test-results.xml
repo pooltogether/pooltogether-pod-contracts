@@ -1,45 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="19.4540" tests="9" failures="0">
-  <testsuite name="Root Suite" timestamp="2020-06-02T03:35:33" tests="0" time="0.0000" failures="0">
+<testsuites name="Mocha Tests" time="21.8290" tests="16" failures="0">
+  <testsuite name="Root Suite" timestamp="2020-06-04T04:36:21" tests="0" time="0.0000" failures="0">
   </testsuite>
-  <testsuite name="Pod Contract" timestamp="2020-06-02T03:35:33" tests="0" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.0000" failures="0">
+  <testsuite name="Pod Contract" timestamp="2020-06-04T04:36:21" tests="0" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.0000" failures="0">
   </testsuite>
-  <testsuite name="prizePool()" timestamp="2020-06-02T03:35:33" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.0130" failures="0">
-    <testcase name="Pod Contract prizePool() should return the ModuleManager address for the Prize Pool" time="0.0130" classname="should return the ModuleManager address for the Prize Pool">
+  <testsuite name="prizePool()" timestamp="2020-06-04T04:36:21" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.0120" failures="0">
+    <testcase name="Pod Contract prizePool() should return the ModuleManager address for the Prize Pool" time="0.0120" classname="should return the ModuleManager address for the Prize Pool">
     </testcase>
   </testsuite>
-  <testsuite name="initialize()" timestamp="2020-06-02T03:35:36" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.0290" failures="0">
-    <testcase name="Pod Contract initialize() should set the params" time="0.0290" classname="should set the params">
+  <testsuite name="initialize()" timestamp="2020-06-04T04:36:24" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.0350" failures="0">
+    <testcase name="Pod Contract initialize() should set the params" time="0.0350" classname="should set the params">
     </testcase>
   </testsuite>
-  <testsuite name="balanceOfUnderlying()" timestamp="2020-06-02T03:35:38" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="2.8470" failures="0">
-    <testcase name="Pod Contract balanceOfUnderlying() should return the amount of Assets deposited by the user" time="2.8470" classname="should return the amount of Assets deposited by the user">
+  <testsuite name="balanceOfUnderlying()" timestamp="2020-06-04T04:36:26" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="2.7150" failures="0">
+    <testcase name="Pod Contract balanceOfUnderlying() should return the amount of Assets deposited by the user" time="2.7150" classname="should return the amount of Assets deposited by the user">
     </testcase>
   </testsuite>
-  <testsuite name="deposit()" timestamp="2020-06-02T03:35:43" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.9480" failures="0">
-    <testcase name="Pod Contract deposit() should accept asset-tokens from user and deposit into prize-pool" time="0.9480" classname="should accept asset-tokens from user and deposit into prize-pool">
+  <testsuite name="deposit()" timestamp="2020-06-04T04:36:30" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="0.9780" failures="0">
+    <testcase name="Pod Contract deposit() should accept asset-tokens from user and deposit into prize-pool" time="0.9780" classname="should accept asset-tokens from user and deposit into prize-pool">
     </testcase>
   </testsuite>
-  <testsuite name="redeemSharesInstantly()" timestamp="2020-06-02T03:35:46" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="3.2030" failures="0">
-    <testcase name="Pod Contract redeemSharesInstantly() should allow a user to pay to redeem their pod-shares instantly" time="3.2030" classname="should allow a user to pay to redeem their pod-shares instantly">
+  <testsuite name="redeemSharesInstantly()" timestamp="2020-06-04T04:36:33" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="3.3810" failures="0">
+    <testcase name="Pod Contract redeemSharesInstantly() should allow a user to pay to redeem their pod-shares instantly" time="3.3810" classname="should allow a user to pay to redeem their pod-shares instantly">
     </testcase>
   </testsuite>
-  <testsuite name="redeemSharesWithTimelock()" timestamp="2020-06-02T03:35:51" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="2.6160" failures="0">
-    <testcase name="Pod Contract redeemSharesWithTimelock() should allow a user to redeem their pod-shares with a timelock on the assets" time="2.6160" classname="should allow a user to redeem their pod-shares with a timelock on the assets">
+  <testsuite name="redeemSharesWithTimelock()" timestamp="2020-06-04T04:36:39" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="2.3680" failures="0">
+    <testcase name="Pod Contract redeemSharesWithTimelock() should allow a user to redeem their pod-shares with a timelock on the assets" time="2.3680" classname="should allow a user to redeem their pod-shares with a timelock on the assets">
     </testcase>
   </testsuite>
-  <testsuite name="sweepForUser()" timestamp="2020-06-02T03:35:55" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="3.3370" failures="0">
-    <testcase name="Pod Contract sweepForUser() should allow a user to redeem their unlocked assets" time="3.3370" classname="should allow a user to redeem their unlocked assets">
+  <testsuite name="sweepForUser()" timestamp="2020-06-04T04:36:43" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="3.7280" failures="0">
+    <testcase name="Pod Contract sweepForUser() should allow a user to redeem their unlocked assets" time="3.7280" classname="should allow a user to redeem their unlocked assets">
     </testcase>
   </testsuite>
-  <testsuite name="Exchange Rates" timestamp="2020-06-02T03:36:00" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="5.8680" failures="0">
-    <testcase name="Pod Contract Exchange Rates should calculate accurate exchange rates" time="5.8680" classname="should calculate accurate exchange rates">
+  <testsuite name="Exchange Rates" timestamp="2020-06-04T04:36:49" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/Pod.test.js" time="6.7070" failures="0">
+    <testcase name="Pod Contract Exchange Rates should calculate accurate exchange rates" time="6.7070" classname="should calculate accurate exchange rates">
     </testcase>
   </testsuite>
-  <testsuite name="PodFactory Contract" timestamp="2020-06-02T03:36:08" tests="0" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodFactory.test.js" time="0.0000" failures="0">
+  <testsuite name="PodFactory Contract" timestamp="2020-06-04T04:36:57" tests="0" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodFactory.test.js" time="0.0000" failures="0">
   </testsuite>
-  <testsuite name="createPod()" timestamp="2020-06-02T03:36:08" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodFactory.test.js" time="0.5930" failures="0">
-    <testcase name="PodFactory Contract createPod() Should create functional Pods" time="0.5930" classname="Should create functional Pods">
+  <testsuite name="createPod()" timestamp="2020-06-04T04:36:57" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodFactory.test.js" time="0.7460" failures="0">
+    <testcase name="PodFactory Contract createPod() Should create functional Pods" time="0.7460" classname="Should create functional Pods">
+    </testcase>
+  </testsuite>
+  <testsuite name="PodSponsorship Contract" timestamp="2020-06-04T04:36:58" tests="0" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorship.test.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="sponsoredPod()" timestamp="2020-06-04T04:36:58" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorship.test.js" time="0.0090" failures="0">
+    <testcase name="PodSponsorship Contract sponsoredPod() should return the address for the Pod" time="0.0090" classname="should return the address for the Pod">
+    </testcase>
+  </testsuite>
+  <testsuite name="initialize()" timestamp="2020-06-04T04:36:59" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorship.test.js" time="0.0280" failures="0">
+    <testcase name="PodSponsorship Contract initialize() should set the params" time="0.0280" classname="should set the params">
+    </testcase>
+  </testsuite>
+  <testsuite name="mint()" timestamp="2020-06-04T04:36:59" tests="2" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorship.test.js" time="0.1410" failures="0">
+    <testcase name="PodSponsorship Contract mint() should allow the Pod to mint tokens" time="0.1130" classname="should allow the Pod to mint tokens">
+    </testcase>
+    <testcase name="PodSponsorship Contract mint() should not allow anyone else to mint tokens" time="0.0280" classname="should not allow anyone else to mint tokens">
+    </testcase>
+  </testsuite>
+  <testsuite name="burn()" timestamp="2020-06-04T04:37:01" tests="2" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorship.test.js" time="0.3470" failures="0">
+    <testcase name="PodSponsorship Contract burn() should allow the Pod to burn tokens" time="0.2220" classname="should allow the Pod to burn tokens">
+    </testcase>
+    <testcase name="PodSponsorship Contract burn() should not allow anyone else to burn tokens" time="0.1250" classname="should not allow anyone else to burn tokens">
+    </testcase>
+  </testsuite>
+  <testsuite name="PodSponsorshipFactory Contract" timestamp="2020-06-04T04:37:02" tests="0" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorshipFactory.test.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="createSponsorship()" timestamp="2020-06-04T04:37:02" tests="1" file="/Users/robsecord/workspace/Ethereum/PoolTogether/pods/test/PodSponsorshipFactory.test.js" time="0.6340" failures="0">
+    <testcase name="PodSponsorshipFactory Contract createSponsorship() Should create functional Sponsorship Tokens" time="0.6340" classname="Should create functional Sponsorship Tokens">
     </testcase>
   </testsuite>
 </testsuites>
