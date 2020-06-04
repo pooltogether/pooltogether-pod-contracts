@@ -1,14 +1,13 @@
 const buidler = require('./helpers/buidler')
-const { deployMockModule, Constants } = require('@pooltogether/pooltogether-contracts')
 
-const { deployContract, deployMockContract, MockProvider } = require('ethereum-waffle')
+const { deployContract, deployMockContract } = require('ethereum-waffle')
 const { expect } = require('chai')
 const { deploy1820 } = require('deploy-eip-1820')
 
 const PodSponsorshipFactory = require('../build/PodSponsorshipFactory.json')
 const PodSponsorship = require('../build/PodSponsorship.json')
 
-const debug = require('debug')('PodSponsorFactory.test')
+const debug = require('debug')('PodSponsorshipFactory.test')
 const txOverrides = { gasLimit: 20000000 }
 
 const _findLog = (logs, eventName) => {
@@ -30,7 +29,7 @@ describe('PodSponsorshipFactory Contract', function () {
 
   beforeEach(async () => {
     [wallet] = await buidler.ethers.getSigners()
-    debug({wallet})
+    debug({ wallet })
 
     debug('deploying 1820...')
     registry = await deploy1820(wallet)
@@ -51,7 +50,7 @@ describe('PodSponsorshipFactory Contract', function () {
 
   describe('createSponsorship()', function () {
     it('Should create functional Sponsorship Tokens', async function () {
-      // Create a new Sponsorship Tokens
+      // Create a new Sponsorship Token & confirm event
       const result = await sponsorshipFactory.createSponsorship(SPONSOR.name, SPONSOR.symbol, SPONSOR.forwarder, SPONSOR.pod)
       debug({ result })
 
