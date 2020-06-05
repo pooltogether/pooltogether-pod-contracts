@@ -26,7 +26,6 @@ describe('PodFactory Contract', function () {
     name: 'Pod',
     symbol: 'POD',
     forwarder: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3',
-    sponsorshipFactory: '',
     sponsorshipToken: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3',
   };
 
@@ -39,20 +38,19 @@ describe('PodFactory Contract', function () {
 
     debug('mocking PodSponsorshipFactory...')
     sponsorshipFactory = await deployMockContract(wallet, PodSponsorshipFactory.abi, txOverrides)
-    POD.sponsorshipFactory = sponsorshipFactory.address
     await sponsorshipFactory.mock.createSponsorship.returns(POD.sponsorshipToken)
 
     // Contract(s) under Test
     debug('deploying PodFactory...')
     podFactory = await deployContract(wallet, PodFactory, [], txOverrides)
     debug('initializing...')
-    await podFactory.initialize()
+    await podFactory.initialize(sponsorshipFactory.address)
   })
 
   describe('createPod()', function () {
     it('Should create functional Pods', async function () {
       // Create a new Pod with a Pool Address
-      const result = await podFactory.createPod(POD.name, POD.symbol, POD.forwarder, POOL.address, POD.sponsorshipFactory)
+      const result = await podFactory.createPod(POD.name, POD.symbol, POD.forwarder, POOL.address)
       debug({ result })
 
       // Get a Receipt of the Transaction in order to verify Event Logs
