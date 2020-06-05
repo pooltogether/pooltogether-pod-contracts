@@ -86,27 +86,16 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     }
 
     function mintShares(uint256 _amount) external nonReentrant returns (uint256) {
+        // Buy Tickets for caller
         address _sender = _msgSender();
-        Ticket _ticket = ticket();
-        IERC20 _assetToken = yieldService().token();
+        _buyTickets(_sender, _amount);
 
-        // Collect collateral from caller
-        _assetToken.transferFrom(_sender, address(this), _amount);
-
-        // Calculate 
+        // Calculate & Mint Pod-Shares
         uint256 _shares = FixedPoint.divideUintByMantissa(_amount, exchangeRateMantissa());
-
-        // Transfer collateral to Prize Pool for Tickets
-        _assetToken.approve(address(_ticket), _amount);
-        _ticket.mintTickets(_amount);
-
-        // Mint Pod-Shares
         _mint(_sender, _shares);
 
         // Log event
         emit PodDeposit(_sender, _amount, _shares);
-
-        // Return the amount of Shares transferred
         return _shares;
     }
 
@@ -126,8 +115,6 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
         // Log event
         emit PodRedeemed(_sender, _assets, _shares, _tickets);
-
-        // Return the amount of Assets transferred
         return _assets;
     }
 
@@ -135,40 +122,25 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         address _sender = _msgSender();
         require(balanceOf(_sender) >= _shares, "Pod: Insufficient share balance");
 
-        // Redeem Pod-Shares for Tickets (less the Fairness-Fee)
-        uint256 _tickets = FixedPoint.divideUintByMantissa(_shares, exchangeRateMantissa());
-        uint256 _timestamp = ticket().redeemTicketsWithTimelock(_tickets);
-
         // Sweep Previously Unlocked Assets for Caller
         uint256 _assets = sweepForUser(_sender);
 
-        // Mint timelock pseudo-tokens for Caller
-        timelockBalance[_sender] = _tickets.add(timelockBalance[_sender]);
-
-        // Set Timestamp for Caller
-        unlockTimestamp[_sender] = _timestamp;
+        // Redeem Pod-Shares with Timelock
+        uint256 _tickets = FixedPoint.divideUintByMantissa(_shares, exchangeRateMantissa());
+        uint256 _timestamp = _redeemTicketsWithTimelock(_sender, _tickets);
 
         // Burn Pod-Share tokens
         _burn(_sender, _shares);
 
         // Log event
         emit PodRedeemedWithTimelock(_sender, _timestamp, _assets, _shares, _tickets);
-
-        // Return amount of unlocked assets redeemed during sweep
         return _assets;
     }
 
     function mintSponsorship(uint256 _amount) external nonReentrant {
+        // Buy Tickets for caller
         address _sender = _msgSender();
-        Ticket _ticket = ticket();
-        IERC20 _assetToken = yieldService().token();
-
-        // Collect collateral from caller
-        _assetToken.transferFrom(_sender, address(this), _amount);
-
-        // Transfer collateral to Prize Pool for Tickets without Pod-Shares
-        _assetToken.approve(address(_ticket), _amount);
-        _ticket.mintTickets(_amount);
+        _buyTickets(_sender, _amount);
 
         // Mint Sponsorship Tokens equal to Amount of Collateral supplied
         podSponsorship.mint(_sender, _amount);
@@ -177,12 +149,12 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         emit PodSponsored(_sender, _amount);
     }
 
-    function redeemSponsorshipInstantly(uint256 _sponsorshipTokens) external nonReentrant {
+    function redeemSponsorshipInstantly(uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
         uint256 _balance = podSponsorship.balanceOf(_sender);
         require(_balance >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
-        // Redeem Sponsorship Tokens for Assets
+        // Redeem Sponsorship Tokens for Assets (less the Fairness-Fee)
         uint256 _assets = ticket().redeemTicketsInstantly(_sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
@@ -193,6 +165,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
         // Log event
         emit PodSponsorRedeemed(_sender, _sponsorshipTokens, _assets);
+        return _assets;
     }
 
     function redeemSponsorshipWithTimelock(uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
@@ -200,25 +173,17 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         uint256 _balance = podSponsorship.balanceOf(_sender);
         require(_balance >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
-        // Redeem Pod-Shares for Tickets (less the Fairness-Fee)
-        uint256 _timestamp = ticket().redeemTicketsWithTimelock(_sponsorshipTokens);
-
         // Sweep Previously Unlocked Assets for Caller
         uint256 _assets = sweepForUser(_sender);
 
-        // Mint timelock pseudo-tokens for Caller
-        timelockBalance[_sender] = _sponsorshipTokens.add(timelockBalance[_sender]);
-
-        // Set Timestamp for Caller
-        unlockTimestamp[_sender] = _timestamp;
+        // Redeem Sponsorship Tokens with Timelock
+        uint256 _timestamp = _redeemTicketsWithTimelock(_sender, _sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
         podSponsorship.burn(_sender, _sponsorshipTokens);
 
         // Log event
         emit PodSponsorRedeemedWithTimelock(_sender, _timestamp, _sponsorshipTokens, _assets);
-
-        // Return amount of unlocked assets redeemed during sweep
         return _assets;
     }
 
@@ -287,6 +252,28 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     //
     // Internal/Private
     //
+
+    function _buyTickets(address _sender, uint256 _amount) internal {
+        Ticket _ticket = ticket();
+        IERC20 _assetToken = yieldService().token();
+
+        // Collect collateral from caller
+        _assetToken.transferFrom(_sender, address(this), _amount);
+
+        // Transfer collateral to Prize Pool for Tickets
+        _assetToken.approve(address(_ticket), _amount);
+        _ticket.mintTickets(_amount);
+    }
+
+    function _redeemTicketsWithTimelock(address _sender, uint256 _amount) internal returns (uint256) {
+        uint256 _timestamp = ticket().redeemTicketsWithTimelock(_amount);
+
+        // Mint timelock pseudo-tokens for Caller
+        timelockBalance[_sender] = _amount.add(timelockBalance[_sender]);
+        unlockTimestamp[_sender] = _timestamp;
+
+        return _timestamp;
+    }
 
     function _mint(address _to, uint256 _amount) internal virtual {
         super._mint(_to, _amount, "", "");
