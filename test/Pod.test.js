@@ -476,7 +476,7 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Sponsorship Tokens
       debug('redeeming excessive sponsorship tokens...')
-      await expect(pod.redeemSponsorshipInstantly(userSponsorship.mul(2)))
+      await expect(pod.redeemSponsorshipWithTimelock(userSponsorship.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance')
 
       // Redeem Sponsorship Tokens with Timelock
