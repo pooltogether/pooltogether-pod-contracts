@@ -62,12 +62,11 @@ describe('PodSponsorshipFactory Contract', function () {
       debug({ logs })
 
       // Confirm Creation Event
-      const expectedLog = _findLog(logs, 'PodSponsorshipCreated')
+      const expectedLog = _findLog(logs, 'ProxyCreated')
       expect(expectedLog).to.exist;
-      expect(expectedLog.values.pod).to.equal(SPONSOR.pod)
 
       // Confirm valid PodSponsorship Token contract
-      let token = await buidler.ethers.getContractAt('PodSponsorship', expectedLog.values.token, wallet)
+      let token = await buidler.ethers.getContractAt('PodSponsorship', expectedLog.values.proxy, wallet)
       expect(await token.sponsoredPod()).to.equal(SPONSOR.pod)
     })
   })

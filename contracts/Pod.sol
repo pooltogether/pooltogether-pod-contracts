@@ -21,14 +21,14 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     using SafeMath for uint256;
 
     // Tickets
-    event PodDeposit(address indexed from, uint256 amount, uint256 shares);
-    event PodRedeemed(address indexed to, uint256 amount, uint256 shares, uint256 tickets);
-    event PodRedeemedWithTimelock(address indexed to, uint256 timestamp, uint256 amount, uint256 shares, uint256 tickets);
+    event PodDeposit(address indexed operator, address indexed receiver, uint256 amount, uint256 shares);
+    event PodRedeemed(address indexed operator, address indexed receiver, uint256 amount, uint256 shares, uint256 tickets);
+    event PodRedeemedWithTimelock(address indexed operator, address indexed receiver, uint256 timestamp, uint256 amount, uint256 shares, uint256 tickets);
 
     // Sponsorships
-    event PodSponsored(address indexed from, uint256 amount);
-    event PodSponsorRedeemed(address indexed to, uint256 tokens, uint256 assets);
-    event PodSponsorRedeemedWithTimelock(address indexed to,  uint256 timestamp, uint256 tokens, uint256 assets);
+    event PodSponsored(address indexed operator, address indexed receiver, uint256 amount);
+    event PodSponsorRedeemed(address indexed operator, address indexed receiver, uint256 tokens, uint256 assets);
+    event PodSponsorRedeemedWithTimelock(address indexed operator, address indexed receiver,  uint256 timestamp, uint256 tokens, uint256 assets);
 
     // Default Exchange-Rate
     uint256 internal constant INITIAL_EXCHANGE_RATE_MANTISSA = 1 ether;
@@ -77,113 +77,123 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         return timelockBalance[_user];
     }
 
-    function getSponsorshipBalance(address _user) external view returns (uint256) {
-        return podSponsorship.balanceOf(_user);
-    }
-
     function getUnlockTimestamp(address _user) external view returns (uint256) {
         return unlockTimestamp[_user];
     }
 
-    function mintShares(uint256 _amount) external nonReentrant returns (uint256) {
+    function mintShares(address _receiver, uint256 _amount) external nonReentrant returns (uint256) {
         // Buy Tickets for caller
         address _sender = _msgSender();
         _buyTickets(_sender, _amount);
 
         // Calculate & Mint Pod-Shares
         uint256 _shares = FixedPoint.divideUintByMantissa(_amount, exchangeRateMantissa());
-        _mint(_sender, _shares);
+        _mint(_receiver, _shares);
 
         // Log event
-        emit PodDeposit(_sender, _amount, _shares);
+        emit PodDeposit(_sender, _receiver, _amount, _shares);
         return _shares;
     }
 
-    function redeemSharesInstantly(uint256 _shares) external nonReentrant returns (uint256) {
+    function redeemSharesInstantly(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
-        require(balanceOf(_sender) >= _shares, "Pod: Insufficient share balance");
+        require(_sender == _from || isOperatorFor(_sender, _from), "Pod: Invalid operator");
+        require(balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
 
         // Redeem Shares for Assets (less the Fairness-Fee)
         uint256 _tickets = FixedPoint.divideUintByMantissa(_shares, exchangeRateMantissa());
         uint256 _assets = ticket().redeemTicketsInstantly(_tickets);
 
         // Burn the Pod-Shares
-        _burn(_sender, _shares);
+        _burn(_from, _shares);
 
-        // Transfer Redeemed Assets to Caller
-        yieldService().token().transfer(_sender, _assets);
+        // Transfer Redeemed Assets to Receiver
+        yieldService().token().transfer(_from, _assets);
 
         // Log event
-        emit PodRedeemed(_sender, _assets, _shares, _tickets);
+        emit PodRedeemed(_sender, _from, _assets, _shares, _tickets);
         return _assets;
     }
 
-    function redeemSharesWithTimelock(uint256 _shares) external nonReentrant returns (uint256) {
+    function redeemSharesWithTimelock(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
-        require(balanceOf(_sender) >= _shares, "Pod: Insufficient share balance");
+        require(_sender == _from || isOperatorFor(_sender, _from), "Pod: Invalid operator");
+        require(balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
 
         // Sweep Previously Unlocked Assets for Caller
-        uint256 _assets = sweepForUser(_sender);
+        uint256 _assets = sweepForUser(_from);
 
         // Redeem Pod-Shares with Timelock
         uint256 _tickets = FixedPoint.divideUintByMantissa(_shares, exchangeRateMantissa());
-        uint256 _timestamp = _redeemTicketsWithTimelock(_sender, _tickets);
+        uint256 _timestamp = _redeemTicketsWithTimelock(_from, _tickets);
 
         // Burn Pod-Share tokens
-        _burn(_sender, _shares);
+        _burn(_from, _shares);
+
+        // Transfer any funds that are already unlocked
+        if (_timestamp <= block.timestamp) {
+          _assets = _assets.add(sweepForUser(_from));
+        }
 
         // Log event
-        emit PodRedeemedWithTimelock(_sender, _timestamp, _assets, _shares, _tickets);
+        emit PodRedeemedWithTimelock(_sender, _from, _timestamp, _assets, _shares, _tickets);
         return _assets;
     }
 
-    function mintSponsorship(uint256 _amount) external nonReentrant {
+    function mintSponsorship(address _receiver, uint256 _amount) external nonReentrant {
         // Buy Tickets for caller
         address _sender = _msgSender();
         _buyTickets(_sender, _amount);
 
         // Mint Sponsorship Tokens equal to Amount of Collateral supplied
-        podSponsorship.mint(_sender, _amount);
+        podSponsorship.mint(_receiver, _amount);
 
         // Log event
-        emit PodSponsored(_sender, _amount);
+        emit PodSponsored(_sender, _receiver, _amount);
     }
 
-    function redeemSponsorshipInstantly(uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
+    function redeemSponsorshipInstantly(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
-        uint256 _balance = podSponsorship.balanceOf(_sender);
+        require(_sender == _from || isOperatorFor(_sender, _from), "Pod: Invalid operator");
+        uint256 _balance = podSponsorship.balanceOf(_from);
         require(_balance >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
         // Redeem Sponsorship Tokens for Assets (less the Fairness-Fee)
         uint256 _assets = ticket().redeemTicketsInstantly(_sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
-        podSponsorship.burn(_sender, _sponsorshipTokens);
+        podSponsorship.burn(_from, _sponsorshipTokens);
 
         // Transfer Redeemed Assets to Caller
-        yieldService().token().transfer(_sender, _assets);
+        yieldService().token().transfer(_from, _assets);
 
         // Log event
-        emit PodSponsorRedeemed(_sender, _sponsorshipTokens, _assets);
+        emit PodSponsorRedeemed(_sender, _from, _sponsorshipTokens, _assets);
         return _assets;
     }
 
-    function redeemSponsorshipWithTimelock(uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
+    function redeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
-        uint256 _balance = podSponsorship.balanceOf(_sender);
+        require(_sender == _from || isOperatorFor(_sender, _from), "Pod: Invalid operator");
+        uint256 _balance = podSponsorship.balanceOf(_from);
         require(_balance >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
         // Sweep Previously Unlocked Assets for Caller
-        uint256 _assets = sweepForUser(_sender);
+        uint256 _assets = sweepForUser(_from);
 
         // Redeem Sponsorship Tokens with Timelock
-        uint256 _timestamp = _redeemTicketsWithTimelock(_sender, _sponsorshipTokens);
+        uint256 _timestamp = _redeemTicketsWithTimelock(_from, _sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
-        podSponsorship.burn(_sender, _sponsorshipTokens);
+        podSponsorship.burn(_from, _sponsorshipTokens);
+
+        // Transfer any funds that are already unlocked
+        if (_timestamp <= block.timestamp) {
+          _assets = _assets.add(sweepForUser(_from));
+        }
 
         // Log event
-        emit PodSponsorRedeemedWithTimelock(_sender, _timestamp, _sponsorshipTokens, _assets);
+        emit PodSponsorRedeemedWithTimelock(_sender, _from, _timestamp, _sponsorshipTokens, _assets);
         return _assets;
     }
 
