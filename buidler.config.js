@@ -3,6 +3,7 @@ usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("buidler-gas-reporter");
 usePlugin("solidity-coverage");
 usePlugin("@nomiclabs/buidler-etherscan");
+usePlugin("@nomiclabs/buidler-ethers");
 
 // Fix for Compiler Error; InternalCompilerError: Metadata too large.
 // reference: https://github.com/sc-forks/solidity-coverage/issues/497#issuecomment-616727092
