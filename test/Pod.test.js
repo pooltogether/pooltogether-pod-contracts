@@ -39,7 +39,6 @@ const _depositAssetsIntoPod = async (method, pod, amount, operator, reciever = {
   return { result, receipt }
 }
 
-
 describe('Pod Contract', function () {
   let wallet
   let otherWallet
