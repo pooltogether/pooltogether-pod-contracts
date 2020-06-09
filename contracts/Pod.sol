@@ -28,7 +28,9 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     // Sponsorships
     event PodSponsored(address indexed operator, address indexed receiver, uint256 amount);
     event PodSponsorRedeemed(address indexed operator, address indexed receiver, uint256 tokens, uint256 assets);
-    event PodSponsorRedeemedWithTimelock(address indexed operator, address indexed receiver,  uint256 timestamp, uint256 tokens, uint256 assets);
+    event PodSponsorRedeemedWithTimelock(address indexed operator, address indexed receiver, uint256 timestamp, uint256 tokens, uint256 assets);
+
+    event PodSwept(address indexed operator, uint256 total, address[] users);
 
     // Default Exchange-Rate
     uint256 internal constant INITIAL_EXCHANGE_RATE_MANTISSA = 1 ether;
@@ -203,8 +205,15 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     }
 
     function sweepForUsers(address[] calldata _users) external returns (uint256) {
+        // Sweep for Pod
         _sweepForPod();
-        return _sweepForUsers(_users);
+
+        // Sweep for Users
+        uint256 _totalSwept = _sweepForUsers(_users);
+
+        // Log Event
+        emit PodSwept(_msgSender(), _totalSwept, _users);
+        return _totalSwept;
     }
 
     function exchangeRateMantissa() public view returns (uint256) {

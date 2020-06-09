@@ -22,6 +22,15 @@ const toEther = ethers.utils.formatEther
 const debug = require('debug')('Pod.test')
 const txOverrides = { gasLimit: 20000000 }
 
+const _getIterableAccounts = (accounts, count) => {
+  return async function* asyncGenerator() {
+    let i = 0;
+    while (i < count) {
+      yield accounts[i++];
+    }
+  }
+}
+
 const _mintSharesInPod = (pod) => 
   async (amount, operator, reciever) => 
     await _depositAssetsIntoPod('mintShares', pod, amount, operator, reciever)
@@ -231,6 +240,13 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.amount).to.equal(amountToDeposit)
       expect(expectedLog.values.shares).to.equal(amountToDeposit)
     })
+
+    // TODO:
+    //   1. Have "Bob" buy tickets
+    //   2. Have the Pod win
+    //   3. Have "Alice" buy tickets"
+    //   4. Now assert that Alice's underlying balance matches her deposit
+    it('should calculate shares accurately when depositing assets into the pool')
   })
 
   describe('redeemSharesInstantly()', () => {
@@ -263,14 +279,14 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Pod-Shares
       debug('redeeming excessive shares...')
-      await expect(pod.redeemSharesInstantly(wallet._address, userShares.mul(2)))
+      await expect(pod.redeemSharesInstantly(userShares.mul(2)))
         .to.be.revertedWith('Pod: Insufficient share balance');
 
       // Redeem Pod-Shares
       debug('redeeming shares...')
       await ticket.mock.redeemTicketsInstantly.withArgs(userShares).returns(userAssets.sub(100))
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userShares)
-      const result = await pod.redeemSharesInstantly(wallet._address, userShares)
+      const result = await pod.redeemSharesInstantly(userShares)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Redeem Event
@@ -293,7 +309,9 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.shares).to.equal(amountToDeposit)
       expect(expectedLog.values.tickets).to.equal(amountToDeposit)
     })
+  })
 
+  describe('operatorRedeemSharesInstantly()', () => {
     it('should allow an operator to pay to redeem pod-shares instantly for a user', async () => {
       const amountToDeposit = toWei('10')
       const operator = wallet
@@ -329,14 +347,14 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Pod-Shares
       debug('redeeming excessive shares...')
-      await expect(pod.connect(operator).redeemSharesInstantly(receiver._address, userShares.mul(2)))
+      await expect(pod.connect(operator).operatorRedeemSharesInstantly(receiver._address, userShares.mul(2)))
         .to.be.revertedWith('Pod: Insufficient share balance');
 
       // Redeem Pod-Shares
       debug('redeeming shares for user...')
       await ticket.mock.redeemTicketsInstantly.withArgs(userShares).returns(userAssets.sub(100))
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userShares)
-      const result = await pod.connect(operator).redeemSharesInstantly(receiver._address, userShares)
+      const result = await pod.connect(operator).operatorRedeemSharesInstantly(receiver._address, userShares)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Redeem Event
@@ -360,7 +378,7 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.tickets).to.equal(amountToDeposit)
     })
 
-    it('should disallow anyone other than the owner or operator to redeem pod-shares instantly', async () => {
+    it('should disallow anyone other than the operator to redeem pod-shares instantly', async () => {
       const accounts = await buidler.ethers.getSigners()
       const amountToDeposit = toWei('10')
       const owner = accounts[0]
@@ -381,7 +399,7 @@ describe('Pod Contract', function () {
       
       // Try to Redeem Pod-Shares
       debug('unauthorized user attempting to redeem shares of owner...')
-      await expect(pod.connect(other).redeemSharesInstantly(owner._address, amountToDeposit))
+      await expect(pod.connect(other).operatorRedeemSharesInstantly(owner._address, amountToDeposit))
         .to.be.revertedWith('Pod: Invalid operator');
     })
   })
@@ -418,7 +436,7 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Pod-Shares
       debug('redeeming excessive shares...')
-      await expect(pod.redeemSharesWithTimelock(wallet._address, userShares.mul(2)))
+      await expect(pod.redeemSharesWithTimelock(userShares.mul(2)))
         .to.be.revertedWith('Pod: Insufficient share balance');
 
       // Redeem Pod-Shares with Timelock
@@ -427,7 +445,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userShares)
       await timelock.mock.sweep.withArgs([pod.address]).returns(userAssets)
 
-      const result = await pod.redeemSharesWithTimelock(wallet._address, userShares)
+      const result = await pod.redeemSharesWithTimelock(userShares)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Shares Burned
@@ -485,7 +503,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userShares)
       await timelock.mock.sweep.withArgs([pod.address]).returns(userAssets)
 
-      const result = await pod.redeemSharesWithTimelock(wallet._address, userShares)
+      const result = await pod.redeemSharesWithTimelock(userShares)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Shares Burned
@@ -507,7 +525,9 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.tickets).to.equal(amountToDeposit)
       expect(expectedLog.values.amount).to.equal(amountToDeposit) // Assets redeemed instantly from sweep
     })
+  })
 
+  describe('operatorRedeemSharesWithTimelock()', () => {
     it('should allow an operator to redeem pod-shares with a timelock on the assets for a user', async () => {
       const amountToDeposit = toWei('10')
       const operator = wallet
@@ -545,7 +565,7 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Pod-Shares
       debug('redeeming excessive shares for user...')
-      await expect(pod.connect(operator).redeemSharesWithTimelock(receiver._address, userShares.mul(2)))
+      await expect(pod.connect(operator).operatorRedeemSharesWithTimelock(receiver._address, userShares.mul(2)))
         .to.be.revertedWith('Pod: Insufficient share balance');
 
       // Redeem Pod-Shares with Timelock
@@ -554,7 +574,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userShares)
       await timelock.mock.sweep.withArgs([pod.address]).returns(userAssets)
 
-      const result = await pod.connect(operator).redeemSharesWithTimelock(receiver._address, userShares)
+      const result = await pod.connect(operator).operatorRedeemSharesWithTimelock(receiver._address, userShares)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Shares Burned
@@ -581,7 +601,7 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.amount).to.equal(toWei('0')) // Assets from previous sweep
     })
 
-    it('should disallow anyone other than the owner or operator to redeem pod-shares with a timelock', async () => {
+    it('should disallow anyone other than the operator to redeem pod-shares with a timelock', async () => {
       const accounts = await buidler.ethers.getSigners()
       const amountToDeposit = toWei('10')
       const owner = accounts[0]
@@ -602,7 +622,7 @@ describe('Pod Contract', function () {
       
       // Try to Redeem Pod-Shares
       debug('unauthorized user attempting to redeem shares of owner...')
-      await expect(pod.connect(other).redeemSharesWithTimelock(owner._address, amountToDeposit))
+      await expect(pod.connect(other).operatorRedeemSharesWithTimelock(owner._address, amountToDeposit))
         .to.be.revertedWith('Pod: Invalid operator');
     })
   })
@@ -724,14 +744,14 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Sponsorship Tokens
       debug('redeeming excessive sponsorship tokens...')
-      await expect(pod.redeemSponsorshipInstantly(wallet._address, userSponsorship.mul(2)))
+      await expect(pod.redeemSponsorshipInstantly(userSponsorship.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance')
 
       // Redeem Sponsorship Tokens
       debug('redeeming sponsorship tokens...')
       await ticket.mock.redeemTicketsInstantly.withArgs(userSponsorship).returns(userAssets.sub(100))
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userAssets)
-      const result = await pod.redeemSponsorshipInstantly(wallet._address, userSponsorship)
+      const result = await pod.redeemSponsorshipInstantly(userSponsorship)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Redeem Event
@@ -753,7 +773,9 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.assets.add(fee)).to.equal(userAssets)
       expect(expectedLog.values.tokens).to.equal(userSponsorship)
     })
+  })
 
+  describe('operatorRedeemSponsorshipInstantly()', () => {
     it('should allow an operator to redeem sponsorship tokens for their underlying assets instantly for a user', async () => {
       const amountToDeposit = toWei('10')
       const operator = wallet
@@ -789,14 +811,14 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Sponsorship Tokens
       debug('redeeming excessive sponsorship tokens for user...')
-      await expect(pod.connect(operator).redeemSponsorshipInstantly(receiver._address, userSponsorship.mul(2)))
+      await expect(pod.connect(operator).operatorRedeemSponsorshipInstantly(receiver._address, userSponsorship.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance')
 
       // Redeem Sponsorship Tokens
       debug('redeeming sponsorship tokens...')
       await ticket.mock.redeemTicketsInstantly.withArgs(userSponsorship).returns(userAssets.sub(100))
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userAssets)
-      const result = await pod.connect(operator).redeemSponsorshipInstantly(receiver._address, userSponsorship)
+      const result = await pod.connect(operator).operatorRedeemSponsorshipInstantly(receiver._address, userSponsorship)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Redeem Event
@@ -819,7 +841,7 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.tokens).to.equal(userSponsorship)
     })
 
-    it('should disallow anyone other than the owner or operator to redeem sponsorship tokens instantly', async () => {
+    it('should disallow anyone other than operator to redeem sponsorship tokens instantly', async () => {
       const accounts = await buidler.ethers.getSigners()
       const amountToDeposit = toWei('10')
       const owner = accounts[0]
@@ -840,7 +862,7 @@ describe('Pod Contract', function () {
       
       // Try to Redeem Sponsorship Tokens
       debug('unauthorized user attempting to redeem shares of owner...')
-      await expect(pod.connect(other).redeemSponsorshipInstantly(owner._address, amountToDeposit))
+      await expect(pod.connect(other).operatorRedeemSponsorshipInstantly(owner._address, amountToDeposit))
         .to.be.revertedWith('Pod: Invalid operator');
     })
   })
@@ -877,7 +899,7 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Sponsorship Tokens
       debug('redeeming excessive sponsorship tokens...')
-      await expect(pod.redeemSponsorshipWithTimelock(wallet._address, userSponsorship.mul(2)))
+      await expect(pod.redeemSponsorshipWithTimelock(userSponsorship.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance')
 
       // Redeem Sponsorship Tokens with Timelock
@@ -886,7 +908,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userSponsorship)
       await timelock.mock.sweep.withArgs([pod.address]).returns(userAssets)
 
-      const result = await pod.redeemSponsorshipWithTimelock(wallet._address, userSponsorship)
+      const result = await pod.redeemSponsorshipWithTimelock(userSponsorship)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Sponsorship Tokens Burned
@@ -943,7 +965,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userSponsorship)
       await timelock.mock.sweep.withArgs([pod.address]).returns(userAssets)
 
-      const result = await pod.redeemSponsorshipWithTimelock(wallet._address, userSponsorship)
+      const result = await pod.redeemSponsorshipWithTimelock(userSponsorship)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Sponsorship Tokens Burned
@@ -964,7 +986,9 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.tokens).to.equal(amountToDeposit)
       expect(expectedLog.values.assets).to.equal(amountToDeposit) // Assets redeemed instantly from sweep
     })
+  })
 
+  describe('operatorRedeemSponsorshipWithTimelock()', () => {
     it('should allow an operator to redeem sponsorship tokens with a timelock on the assets for a user', async () => {
       const amountToDeposit = toWei('10')
       const operator = wallet
@@ -1002,7 +1026,7 @@ describe('Pod Contract', function () {
 
       // Try to Redeem too many Sponsorship Tokens
       debug('redeeming excessive sponsorship tokens...')
-      await expect(pod.connect(operator).redeemSponsorshipWithTimelock(receiver._address, userSponsorship.mul(2)))
+      await expect(pod.connect(operator).operatorRedeemSponsorshipWithTimelock(receiver._address, userSponsorship.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance')
 
       // Redeem Sponsorship Tokens with Timelock
@@ -1011,7 +1035,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userSponsorship)
       await timelock.mock.sweep.withArgs([pod.address]).returns(userAssets)
 
-      const result = await pod.connect(operator).redeemSponsorshipWithTimelock(receiver._address, userSponsorship)
+      const result = await pod.connect(operator).operatorRedeemSponsorshipWithTimelock(receiver._address, userSponsorship)
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm Sponsorship Tokens Burned
@@ -1037,7 +1061,7 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.assets).to.equal(toWei('0')) // Assets from previous sweep
     })
 
-    it('should disallow anyone other than the owner or operator to redeem sponsorship tokens with a timelock', async () => {
+    it('should disallow anyone other than the operator to redeem sponsorship tokens with a timelock', async () => {
       const accounts = await buidler.ethers.getSigners()
       const amountToDeposit = toWei('10')
       const owner = accounts[0]
@@ -1058,7 +1082,7 @@ describe('Pod Contract', function () {
       
       // Try to Redeem Sponsorship Tokens
       debug('unauthorized user attempting to redeem shares of owner...')
-      await expect(pod.connect(other).redeemSponsorshipWithTimelock(owner._address, amountToDeposit))
+      await expect(pod.connect(other).operatorRedeemSponsorshipWithTimelock(owner._address, amountToDeposit))
         .to.be.revertedWith('Pod: Invalid operator');
     })
   })
@@ -1068,6 +1092,98 @@ describe('Pod Contract', function () {
   //
 
   describe('sweepForUser()', () => {
+    it('should allow anyone to sweep the pod for multiple users', async () => {
+      const amountToDeposit = toWei('10')
+      const accounts = await buidler.ethers.getSigners()
+      const iterableAccounts = _getIterableAccounts(accounts, 5)
+      const accountAddresses = []
+      let ticketTotal = toWei('0')
+      let finalSweepTotal
+
+      // Mocks for Deposit
+      await token.mock.balanceOf.withArgs(MGR.address).returns(amountToDeposit)
+      await ticket.mock.mintTickets.withArgs(amountToDeposit).returns()
+      await timelock.mock.sweep.withArgs([pod.address]).returns(toWei('0'))
+
+      for await (let user of iterableAccounts()) {
+        // Mock Ticket Totals
+        await ticket.mock.balanceOf.withArgs(pod.address).returns(ticketTotal)
+        ticketTotal = ticketTotal.add(amountToDeposit)
+
+        // Perform Deposits
+        debug(`depositing assets for account "${user._address}"...`)
+        accountAddresses.push(user._address)
+        await mintShares(amountToDeposit, user)
+
+        // Confirm Balances
+        expect(await pod.balanceOf(user._address)).to.equal(amountToDeposit)
+      }
+
+      // Track Final Amount to be Swept
+      finalSweepTotal = ticketTotal
+
+      // Attempt to Sweep early BEFORE Redeeming for All Users
+      debug('Sweeping early BEFORE redeem...')
+      debug({accountAddresses})
+      let result = await pod.sweepForUsers(accountAddresses)
+      let receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
+
+      // Confirm nothing was swept yet
+      let expectedLog = _findLog(receipt, 'PodSwept')
+      expect(expectedLog).to.exist;
+      expect(expectedLog.values.total).to.equal(toWei('0'))
+
+      // Calculate Block & Prize Times
+      const block = await buidler.ethers.provider.getBlockNumber()
+      const blockTime = (await buidler.ethers.provider.getBlock(block)).timestamp
+      const prizeEndTime = blockTime + 1000
+      debug({ blockTime, prizeEndTime })
+
+      // Redeem with Timelock for all Users
+      for await (let user of iterableAccounts()) {
+        // Mocks for Redeem
+        debug({ticketTotal})
+        await ticket.mock.redeemTicketsWithTimelock.withArgs(amountToDeposit).returns(prizeEndTime)
+        await ticket.mock.balanceOf.withArgs(pod.address).returns(ticketTotal)
+        ticketTotal = ticketTotal.sub(amountToDeposit)
+
+        // Redeem Pod-Shares with Timelock
+        debug(`redeeming shares with timelock for account "${user._address}"...`)
+        await pod.connect(user).redeemSharesWithTimelock(amountToDeposit)
+        
+        // Confirm timelocked tokens were minted to user
+        expect(await pod.getTimelockBalance(user._address)).to.equal(amountToDeposit)
+      }
+
+      // Attempt to Sweep early AFTER Redeeming for All Users
+      debug('Sweeping early AFTER redeem...')
+      result = await pod.sweepForUsers(accountAddresses)
+      receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
+
+      // Confirm nothing was swept yet
+      expectedLog = _findLog(receipt, 'PodSwept')
+      expect(expectedLog).to.exist;
+      expect(expectedLog.values.total).to.equal(toWei('0'))
+
+      // Increase time to release the locked assets
+      await increaseTime(1100)
+
+      // Attempt to Sweep for all Users
+      debug('Sweeping for all users...')
+      result = await pod.sweepForUsers(accountAddresses)
+      receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
+
+      // Confirm nothing was swept yet
+      expectedLog = _findLog(receipt, 'PodSwept')
+      expect(expectedLog).to.exist;
+      expect(expectedLog.values.total).to.equal(finalSweepTotal)
+
+      // Confirm everything was swept properly
+      for await (let user of iterableAccounts()) {
+        expect(await pod.getTimelockBalance(user._address)).to.equal(toWei('0'))
+      }
+    })
+
     it('should allow a user to redeem their unlocked assets', async () => {
       const amountToDeposit = toWei('10')
       const amountToRedeem = toWei('4')
@@ -1105,7 +1221,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(userShares)
       await timelock.mock.sweep.withArgs([pod.address]).returns(toWei('0')) // First call sweeps nothing
 
-      let result = await pod.redeemSharesWithTimelock(wallet._address, amountToRedeem)
+      let result = await pod.redeemSharesWithTimelock(amountToRedeem)
       let receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm shares burned & timelocked tokens minted
@@ -1129,7 +1245,7 @@ describe('Pod Contract', function () {
       await ticket.mock.balanceOf.withArgs(pod.address).returns(remainderToRedeem)
       await timelock.mock.sweep.withArgs([pod.address]).returns(amountToRedeem) // Second call sweeps last amount redeemed
 
-      result = await pod.redeemSharesWithTimelock(wallet._address, remainderToRedeem)
+      result = await pod.redeemSharesWithTimelock(remainderToRedeem)
       receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
 
       // Confirm shares burned & timelocked tokens minted
