@@ -5,7 +5,7 @@ const { expect } = require('chai')
 const { deploy1820 } = require('deploy-eip-1820')
 
 const PodFactory = require('../build/PodFactory.json')
-const PodSponsorshipFactory = require('../build/PodSponsorshipFactory.json')
+const PodTokenFactory = require('../build/PodTokenFactory.json')
 
 const debug = require('debug')('PodFactory.test')
 const txOverrides = { gasLimit: 20000000 }
@@ -17,16 +17,19 @@ const _findLog = (logs, eventName) => {
 describe('PodFactory Contract', function () {
   let wallet
   let podFactory
-  let sponsorshipFactory
+  let tokenFactory
 
   const POOL = {
     address: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3'
   };
   const POD = {
-    name: 'Pod',
-    symbol: 'POD',
+    podSharesTokenName: 'Pod',
+    podSharesTokenSymbol: 'POD',
+    podSponsorTokenName: 'Sponsor',
+    podSponsorTokenSymbol: 'SPON',
     forwarder: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3',
-    sponsorshipToken: '0x1337c0d31337c0D31337C0d31337c0d31337C0d3',
+    sharesToken: '0x1111111111111111111111111111111111111111',
+    sponsorshipToken: '0x2222222222222222222222222222222222222222',
   };
 
   beforeEach(async () => {
@@ -36,21 +39,28 @@ describe('PodFactory Contract', function () {
     debug('deploying 1820...')
     registry = await deploy1820(wallet)
 
-    debug('mocking PodSponsorshipFactory...')
-    sponsorshipFactory = await deployMockContract(wallet, PodSponsorshipFactory.abi, txOverrides)
-    await sponsorshipFactory.mock.createSponsorship.returns(POD.sponsorshipToken)
+    debug('mocking PodTokenFactory...')
+    tokenFactory = await deployMockContract(wallet, PodTokenFactory.abi, txOverrides)
+    await tokenFactory.mock.createToken.returns(POD.sharesToken)
 
     // Contract(s) under Test
     debug('deploying PodFactory...')
     podFactory = await deployContract(wallet, PodFactory, [], txOverrides)
     debug('initializing...')
-    await podFactory.initialize(sponsorshipFactory.address)
+    await podFactory.initialize(tokenFactory.address)
   })
 
   describe('createPod()', function () {
     it('Should create functional Pods', async function () {
       // Create a new Pod with a Pool Address
-      const result = await podFactory.createPod(POD.name, POD.symbol, POD.forwarder, POOL.address)
+      const result = await podFactory.createPod(
+        POD.podSharesTokenName, 
+        POD.podSharesTokenSymbol, 
+        POD.podSponsorTokenName, 
+        POD.podSponsorTokenSymbol, 
+        POD.forwarder, 
+        POOL.address
+      )
       debug({ result })
 
       // Get a Receipt of the Transaction in order to verify Event Logs
