@@ -2,7 +2,7 @@ pragma solidity ^0.6.4;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/GSN/Context.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -15,9 +15,9 @@ import "@pooltogether/pooltogether-contracts/contracts/modules/ticket/Ticket.sol
 import "@pooltogether/pooltogether-contracts/contracts/modules/timelock/Timelock.sol";
 import "@pooltogether/pooltogether-contracts/contracts/Constants.sol";
 
-import "./PodSponsorship.sol";
+import "./PodToken.sol";
 
-contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, BaseRelayRecipient {
+contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, BaseRelayRecipient {
     using SafeMath for uint256;
 
     // Tickets
@@ -38,8 +38,11 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     // Module-Manager for the Prize Pool
     address public prizePoolManager;
 
+    // Pod-Share Tokens
+    PodToken public podShares;
+
     // Sponsorship Tokens
-    PodSponsorship public podSponsorship;
+    PodToken public podSponsorship;
 
     // Timelocked Tokens
     mapping (address => uint256) internal timelockBalance;   // asset collateral
@@ -50,21 +53,19 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     //
 
     function initialize(
-        string memory _name,
-        string memory _symbol,
         address _trustedForwarder,
         address _prizePoolManager,
+        address _podShares,
         address _podSponsorship
     ) 
-        public 
+        external 
         initializer 
     {
         __ReentrancyGuard_init();
-        address[] memory _defaultOperators;
-        __ERC777_init(_name, _symbol, _defaultOperators);
         trustedForwarder = _trustedForwarder;
         prizePoolManager = _prizePoolManager;
-        podSponsorship = PodSponsorship(_podSponsorship);
+        podShares = PodToken(_podShares);
+        podSponsorship = PodToken(_podSponsorship);
     }
 
     //
@@ -72,7 +73,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     //
 
     function balanceOfUnderlying(address _user) external view returns (uint256) {
-        return FixedPoint.multiplyUintByMantissa(balanceOf(_user), exchangeRateMantissa());
+        return FixedPoint.multiplyUintByMantissa(podShares.balanceOf(_user), exchangeRateMantissa());
     }
 
     function getTimelockBalance(address _user) external view returns (uint256) {
@@ -93,7 +94,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         _buyTickets(_sender, _amount);
 
         // Mint Pod-Shares
-        _mint(_receiver, _shares);
+        podShares.mint(_receiver, _shares);
 
         // Log event
         emit PodDeposit(_sender, _receiver, _amount, _shares);
@@ -113,7 +114,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
     function operatorRedeemSharesInstantly(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podShares.isOperatorFor(_operator, _from), "Pod: Invalid operator");
 
         // Redeem Shares on behalf of User
         (uint256 _assets, uint256 _tickets) = _redeemSharesInstantly(_from, _shares);
@@ -136,7 +137,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
     function operatorRedeemSharesWithTimelock(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podShares.isOperatorFor(_operator, _from), "Pod: Invalid operator");
         
         // Redeem Shares on behalf of User
         (uint256 _assets, uint256 _tickets, uint256 _timestamp) = _redeemSharesWithTimelock(_from, _shares);
@@ -171,7 +172,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
     function operatorRedeemSponsorshipInstantly(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podSponsorship.isOperatorFor(_operator, _from), "Pod: Invalid operator");
         
         // Redeem Sponsorship Tokens on behalf of user
         uint256 _assets = _redeemSponsorshipInstantly(_from, _sponsorshipTokens);
@@ -194,7 +195,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
     function operatorRedeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podSponsorship.isOperatorFor(_operator, _from), "Pod: Invalid operator");
         
         // Redeem Sponsorship Tokens
         (uint256 _assets, uint256 _timestamp) = _redeemSponsorshipWithTimelock(_from, _sponsorshipTokens);
@@ -217,11 +218,12 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     }
 
     function exchangeRateMantissa() public view returns (uint256) {
-        if (totalSupply() == 0) {
+        uint256 _totalSupply = podShares.totalSupply();
+        if (_totalSupply == 0) {
             return INITIAL_EXCHANGE_RATE_MANTISSA;
         } else {
             uint256 collateral = ticket().balanceOf(address(this));
-            return FixedPoint.calculateMantissa(collateral, totalSupply());
+            return FixedPoint.calculateMantissa(collateral, _totalSupply);
         }
     }
 
@@ -258,14 +260,14 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     //
 
     function _redeemSharesInstantly(address _from, uint256 _shares) internal returns (uint256, uint256) {
-        require(balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
+        require(podShares.balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
 
         // Redeem Shares for Assets (less the Fairness-Fee)
-        uint256 _tickets = FixedPoint.divideUintByMantissa(_shares, exchangeRateMantissa());
+        uint256 _tickets = FixedPoint.multiplyUintByMantissa(_shares, exchangeRateMantissa());
         uint256 _assets = ticket().redeemTicketsInstantly(_tickets);
 
         // Burn the Pod-Shares
-        _burn(_from, _shares);
+        podShares.burnFrom(_from, _shares);
 
         // Transfer Redeemed Assets to Receiver
         yieldService().token().transfer(_from, _assets);
@@ -273,18 +275,18 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     }
 
     function _redeemSharesWithTimelock(address _from, uint256 _shares) internal returns (uint256, uint256, uint256) {
-        require(balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
+        require(podShares.balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
 
         // Sweep Previously Unlocked Assets for Caller
         _sweepForPod();
         uint256 _assets = _sweepForUser(_from);
 
         // Redeem Pod-Shares with Timelock
-        uint256 _tickets = FixedPoint.divideUintByMantissa(_shares, exchangeRateMantissa());
+        uint256 _tickets = FixedPoint.multiplyUintByMantissa(_shares, exchangeRateMantissa());
         uint256 _timestamp = _redeemTicketsWithTimelock(_from, _tickets);
 
         // Burn Pod-Share tokens
-        _burn(_from, _shares);
+        podShares.burnFrom(_from, _shares);
 
         // Transfer any funds that are already unlocked
         if (_timestamp <= block.timestamp) {
@@ -294,14 +296,13 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     }
 
     function _redeemSponsorshipInstantly(address _from, uint256 _sponsorshipTokens) internal returns (uint256) {
-        uint256 _balance = podSponsorship.balanceOf(_from);
-        require(_balance >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
+        require(podSponsorship.balanceOf(_from) >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
         // Redeem Sponsorship Tokens for Assets (less the Fairness-Fee)
         uint256 _assets = ticket().redeemTicketsInstantly(_sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
-        podSponsorship.burn(_from, _sponsorshipTokens);
+        podSponsorship.burnFrom(_from, _sponsorshipTokens);
 
         // Transfer Redeemed Assets to Caller
         yieldService().token().transfer(_from, _assets);
@@ -309,8 +310,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
     }
 
     function _redeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) internal returns (uint256, uint256) {
-        uint256 _balance = podSponsorship.balanceOf(_from);
-        require(_balance >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
+        require(podSponsorship.balanceOf(_from) >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
         // Sweep Previously Unlocked Assets for Caller
         _sweepForPod();
@@ -320,7 +320,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
         uint256 _timestamp = _redeemTicketsWithTimelock(_from, _sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
-        podSponsorship.burn(_from, _sponsorshipTokens);
+        podSponsorship.burnFrom(_from, _sponsorshipTokens);
 
         // Transfer any funds that are already unlocked
         if (_timestamp <= block.timestamp) {
@@ -392,14 +392,6 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ERC777UpgradeSafe, Ba
 
         // Return amount of assets swept
         return _totalSwept;
-    }
-
-    function _mint(address _to, uint256 _amount) internal virtual {
-        super._mint(_to, _amount, "", "");
-    }
-
-    function _burn(address _from, uint256 _amount) internal virtual {
-        super._burn(_from, _amount, "", "");
     }
 
     function _msgSender() internal override(BaseRelayRecipient, ContextUpgradeSafe) virtual view returns (address payable) {
