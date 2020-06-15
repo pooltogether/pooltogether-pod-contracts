@@ -3,7 +3,6 @@ usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("buidler-gas-reporter");
 usePlugin("solidity-coverage");
 usePlugin("@nomiclabs/buidler-etherscan");
-usePlugin("@nomiclabs/buidler-ethers");
 
 // Fix for Compiler Error; InternalCompilerError: Metadata too large.
 // reference: https://github.com/sc-forks/solidity-coverage/issues/497#issuecomment-616727092
@@ -42,7 +41,8 @@ module.exports = {
     },
     coverage: {
       url: 'http://127.0.0.1:8555',
-      gas: 20000000
+      gas: 20000000,
+      blockGasLimit: 20000000
     },
     local: {
       url: 'http://127.0.0.1:' + process.env.LOCAL_BUIDLEREVM_PORT,
@@ -64,7 +64,8 @@ module.exports = {
     noColors: true,
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     excludeContracts: [
-      'test/ERC20Mintable.sol'
+      'test/ERC20Mintable.sol',
+      'test/PodHarness.sol',
     ],
     enabled: (process.env.REPORT_GAS) ? true : false
   }
