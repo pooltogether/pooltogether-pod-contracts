@@ -30,7 +30,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
     event PodSponsorRedeemed(address indexed operator, address indexed receiver, uint256 tokens, uint256 assets);
     event PodSponsorRedeemedWithTimelock(address indexed operator, address indexed receiver, uint256 timestamp, uint256 tokens, uint256 assets);
 
-    event PodSwept(address indexed operator, uint256 total, address[] users);
+    event PodSwept(address indexed operator, address indexed user, uint256 total);
 
     // Default Exchange-Rate
     uint256 internal constant INITIAL_EXCHANGE_RATE_MANTISSA = 1 ether;
@@ -57,9 +57,9 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
         address _prizePoolManager,
         address _podShares,
         address _podSponsorship
-    ) 
-        external 
-        initializer 
+    )
+        external
+        initializer
     {
         __ReentrancyGuard_init();
         trustedForwarder = _trustedForwarder;
@@ -103,7 +103,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function redeemSharesInstantly(uint256 _shares) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
-        
+
         // Redeem Shares
         (uint256 _assets, uint256 _tickets) = _redeemSharesInstantly(_sender, _shares);
 
@@ -138,7 +138,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
     function operatorRedeemSharesWithTimelock(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
         require(podShares.isOperatorFor(_operator, _from), "Pod: Invalid operator");
-        
+
         // Redeem Shares on behalf of User
         (uint256 _assets, uint256 _tickets, uint256 _timestamp) = _redeemSharesWithTimelock(_from, _shares);
 
@@ -173,7 +173,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
     function operatorRedeemSponsorshipInstantly(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
         require(podSponsorship.isOperatorFor(_operator, _from), "Pod: Invalid operator");
-        
+
         // Redeem Sponsorship Tokens on behalf of user
         uint256 _assets = _redeemSponsorshipInstantly(_from, _sponsorshipTokens);
 
@@ -184,7 +184,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function redeemSponsorshipWithTimelock(uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _sender = _msgSender();
-        
+
         // Redeem Sponsorship Tokens
         (uint256 _assets, uint256 _timestamp) = _redeemSponsorshipWithTimelock(_sender, _sponsorshipTokens);
 
@@ -196,7 +196,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
     function operatorRedeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
         require(podSponsorship.isOperatorFor(_operator, _from), "Pod: Invalid operator");
-        
+
         // Redeem Sponsorship Tokens
         (uint256 _assets, uint256 _timestamp) = _redeemSponsorshipWithTimelock(_from, _sponsorshipTokens);
 
@@ -210,11 +210,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
         _sweepForPod();
 
         // Sweep for Users
-        uint256 _totalSwept = _sweepForUsers(_users);
-
-        // Log Event
-        emit PodSwept(_msgSender(), _totalSwept, _users);
-        return _totalSwept;
+        return _sweepForUsers(_users);
     }
 
     function exchangeRateMantissa() public view returns (uint256) {
@@ -229,16 +225,16 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function calculateSharesOnDeposit(uint256 _amount) external view returns (uint256) {
         // New Shares = Deposit * (existing shares / total tickets)
-        return FixedPoint.divideUintByMantissa( 
+        return FixedPoint.divideUintByMantissa(
             _amount,
             exchangeRateMantissa()
         );
-    }    
-    
+    }
+
     function calculateTicketsOnRedeem(uint256 _shares) external view returns (uint256) {
         // Tickets = (redeem shares / total shares) * Total Tickets
         return FixedPoint.multiplyUintByMantissa(
-            _shares, 
+            _shares,
             exchangeRateMantissa()
         );
     }
@@ -259,40 +255,38 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
     // Internal/Private
     //
 
-    function _redeemSharesInstantly(address _from, uint256 _shares) internal returns (uint256, uint256) {
+    function _redeemSharesInstantly(address _from, uint256 _shares) internal returns (uint256 assets, uint256 tickets) {
         require(podShares.balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
 
         // Redeem Shares for Assets (less the Fairness-Fee)
-        uint256 _tickets = FixedPoint.multiplyUintByMantissa(_shares, exchangeRateMantissa());
-        uint256 _assets = ticket().redeemTicketsInstantly(_tickets);
+        tickets = FixedPoint.multiplyUintByMantissa(_shares, exchangeRateMantissa());
+        assets = ticket().redeemTicketsInstantly(tickets);
 
         // Burn the Pod-Shares
         podShares.burnFrom(_from, _shares);
 
         // Transfer Redeemed Assets to Receiver
-        yieldService().token().transfer(_from, _assets);
-        return (_assets, _tickets);
+        yieldService().token().transfer(_from, assets);
     }
 
-    function _redeemSharesWithTimelock(address _from, uint256 _shares) internal returns (uint256, uint256, uint256) {
+    function _redeemSharesWithTimelock(address _from, uint256 _shares) internal returns (uint256 assets, uint256 tickets, uint256 timestamp) {
         require(podShares.balanceOf(_from) >= _shares, "Pod: Insufficient share balance");
 
         // Sweep Previously Unlocked Assets for Caller
         _sweepForPod();
-        uint256 _assets = _sweepForUser(_from);
+        assets = _sweepForUser(_from);
 
         // Redeem Pod-Shares with Timelock
-        uint256 _tickets = FixedPoint.multiplyUintByMantissa(_shares, exchangeRateMantissa());
-        uint256 _timestamp = _redeemTicketsWithTimelock(_from, _tickets);
+        tickets = FixedPoint.multiplyUintByMantissa(_shares, exchangeRateMantissa());
+        timestamp = _redeemTicketsWithTimelock(_from, tickets);
 
         // Burn Pod-Share tokens
         podShares.burnFrom(_from, _shares);
 
         // Transfer any funds that are already unlocked
-        if (_timestamp <= block.timestamp) {
-          _assets = _assets.add(_sweepForUser(_from));
+        if (timestamp <= block.timestamp) {
+          assets = assets.add(_sweepForUser(_from));
         }
-        return (_assets, _tickets, _timestamp);
     }
 
     function _redeemSponsorshipInstantly(address _from, uint256 _sponsorshipTokens) internal returns (uint256) {
@@ -309,24 +303,23 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
         return _assets;
     }
 
-    function _redeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) internal returns (uint256, uint256) {
+    function _redeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) internal returns (uint256 assets, uint256 timestamp) {
         require(podSponsorship.balanceOf(_from) >= _sponsorshipTokens, "Pod: Insufficient sponsorship balance");
 
         // Sweep Previously Unlocked Assets for Caller
         _sweepForPod();
-        uint256 _assets = _sweepForUser(_from);
+        assets = _sweepForUser(_from);
 
         // Redeem Sponsorship Tokens with Timelock
-        uint256 _timestamp = _redeemTicketsWithTimelock(_from, _sponsorshipTokens);
+        timestamp = _redeemTicketsWithTimelock(_from, _sponsorshipTokens);
 
         // Burn the Sponsorship Tokens
         podSponsorship.burnFrom(_from, _sponsorshipTokens);
 
         // Transfer any funds that are already unlocked
-        if (_timestamp <= block.timestamp) {
-          _assets = _assets.add(_sweepForUser(_from));
+        if (timestamp <= block.timestamp) {
+          assets = assets.add(_sweepForUser(_from));
         }
-        return (_assets, _timestamp);
     }
 
     function _buyTickets(address _sender, uint256 _amount) internal {
@@ -370,6 +363,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
         IERC20 _assetToken = yieldService().token();
         uint256 _userBalance;
         uint256 _totalSwept;
+        address _sender = _msgSender();
         address _user;
 
         for (uint256 i = 0; i < _users.length; i++) {
@@ -387,6 +381,9 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
               // Total Transferred
               _totalSwept = _totalSwept.add(_userBalance);
+
+              // Log Event
+              emit PodSwept(_sender, _user, _userBalance);
           }
         }
 
