@@ -1,0 +1,199 @@
+{
+	"31337": {
+		"PodSponsorshipFactory": {
+			"txHash": "0x6d5905ce3bf1e5155fad5ca3a0eb3349b77fdf85a09bb7e0927d6bfe25cdbaed",
+			"address": "0xd1b9A9a9306AA3A0A7A3c4023a995FF7453124BE",
+			"chainId": 31337,
+			"abi": [
+				{
+					"anonymous": false,
+					"inputs": [
+						{
+							"indexed": false,
+							"internalType": "address",
+							"name": "proxy",
+							"type": "address"
+						}
+					],
+					"name": "ProxyCreated",
+					"type": "event"
+				},
+				{
+					"inputs": [
+						{
+							"internalType": "string",
+							"name": "_name",
+							"type": "string"
+						},
+						{
+							"internalType": "string",
+							"name": "_symbol",
+							"type": "string"
+						},
+						{
+							"internalType": "address",
+							"name": "_trustedForwarder",
+							"type": "address"
+						},
+						{
+							"internalType": "address",
+							"name": "_pod",
+							"type": "address"
+						}
+					],
+					"name": "createSponsorship",
+					"outputs": [
+						{
+							"internalType": "contract PodSponsorship",
+							"name": "",
+							"type": "address"
+						}
+					],
+					"stateMutability": "nonpayable",
+					"type": "function"
+				},
+				{
+					"inputs": [
+						{
+							"internalType": "address",
+							"name": "_logic",
+							"type": "address"
+						},
+						{
+							"internalType": "bytes",
+							"name": "_data",
+							"type": "bytes"
+						}
+					],
+					"name": "deployMinimal",
+					"outputs": [
+						{
+							"internalType": "address",
+							"name": "proxy",
+							"type": "address"
+						}
+					],
+					"stateMutability": "nonpayable",
+					"type": "function"
+				},
+				{
+					"inputs": [],
+					"name": "initialize",
+					"outputs": [],
+					"stateMutability": "nonpayable",
+					"type": "function"
+				}
+			]
+		},
+		"PodFactory": {
+			"txHash": "0x633157766547127cfa71b06311c2ba5d447ac8acbe656e8227253e301900209f",
+			"address": "0x5C534619ECab9E9c291d41edB2601b3Ec2866F78",
+			"chainId": 31337,
+			"abi": [
+				{
+					"anonymous": false,
+					"inputs": [
+						{
+							"indexed": true,
+							"internalType": "address",
+							"name": "podAddress",
+							"type": "address"
+						},
+						{
+							"indexed": true,
+							"internalType": "address",
+							"name": "prizePoolManager",
+							"type": "address"
+						}
+					],
+					"name": "PodCreated",
+					"type": "event"
+				},
+				{
+					"anonymous": false,
+					"inputs": [
+						{
+							"indexed": false,
+							"internalType": "address",
+							"name": "proxy",
+							"type": "address"
+						}
+					],
+					"name": "ProxyCreated",
+					"type": "event"
+				},
+				{
+					"inputs": [
+						{
+							"internalType": "string",
+							"name": "_name",
+							"type": "string"
+						},
+						{
+							"internalType": "string",
+							"name": "_symbol",
+							"type": "string"
+						},
+						{
+							"internalType": "address",
+							"name": "_trustedForwarder",
+							"type": "address"
+						},
+						{
+							"internalType": "address",
+							"name": "_prizePoolManager",
+							"type": "address"
+						}
+					],
+					"name": "createPod",
+					"outputs": [
+						{
+							"internalType": "contract Pod",
+							"name": "",
+							"type": "address"
+						}
+					],
+					"stateMutability": "nonpayable",
+					"type": "function"
+				},
+				{
+					"inputs": [
+						{
+							"internalType": "address",
+							"name": "_logic",
+							"type": "address"
+						},
+						{
+							"internalType": "bytes",
+							"name": "_data",
+							"type": "bytes"
+						}
+					],
+					"name": "deployMinimal",
+					"outputs": [
+						{
+							"internalType": "address",
+							"name": "proxy",
+							"type": "address"
+						}
+					],
+					"stateMutability": "nonpayable",
+					"type": "function"
+				},
+				{
+					"inputs": [
+						{
+							"internalType": "address",
+							"name": "_podSponsorFactory",
+							"type": "address"
+						}
+					],
+					"name": "initialize",
+					"outputs": [],
+					"stateMutability": "nonpayable",
+					"type": "function"
+				}
+			]
+		}
+	}
+}

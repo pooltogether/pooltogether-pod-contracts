@@ -16,3 +16,4 @@ abis
 #Workspace files
 *.code-Workspace
 .DS_Store
+test-results.xml

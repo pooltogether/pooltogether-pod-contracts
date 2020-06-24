@@ -1,12 +1,13 @@
 {
   "name": "@pooltogether/pods",
-  "version": "3.0.2",
+  "version": "3.0.0-alpha.3",
   "description": "PoolTogether Pods Factory",
   "main": "index.js",
   "scripts": {
     "test": "buidler test",
     "compile": "buidler compile",
     "start": "buidler node --port $LOCAL_BUIDLEREVM_PORT",
+    "deploy-local": "buidler run --network local scripts/deploy.js",
     "coverage": "rm -rf build cache && buidler compile && buidler coverage --network coverage --temp build",
     "gas": "REPORT_GAS=true buidler test --network local",
     "console-kovan": "oz-console -n kovan",
@@ -16,7 +17,7 @@
     "clean": "rm -rf build cache abis",
     "verify-kovan": "oz verify -n kovan --remote etherscan --api-key $ETHERSCAN_API_KEY",
     "clean-local": "rm -f .oz-migrate/dev-31337; rm -f .openzeppelin/dev-31337.json",
-    "prepack": "rm -rf build cache && oz compile && truffle-extract -o abis",
+    "prepack": "rm -rf build cache && buidler compile && truffle-extract -b build -o abis",
     "postpublish": "PACKAGE_VERSION=$(./scripts/package-version.sh) && git tag -ae v$PACKAGE_VERSION && git push --tags"
   },
   "author": "PoolTogether",
