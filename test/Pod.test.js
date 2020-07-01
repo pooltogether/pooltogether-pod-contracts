@@ -31,12 +31,12 @@ const txOverrides = { gasLimit: 20000000 }
 
 
 
-const _mintSharesInPod = (pod) => 
-  async (amount, operator, reciever) => 
+const _mintSharesInPod = (pod) =>
+  async (amount, operator, reciever) =>
     await _depositAssetsIntoPod('mintShares', pod, amount, operator, reciever)
 
-const _mintSponsorshipInPod = (pod) => 
-  async (amount, operator, reciever) => 
+const _mintSponsorshipInPod = (pod) =>
+  async (amount, operator, reciever) =>
     await _depositAssetsIntoPod('mintSponsorship', pod, amount, operator, reciever)
 
 const _depositAssetsIntoPod = async (method, pod, amount, operator, reciever = {}) => {
@@ -151,7 +151,7 @@ describe('Pod Contract', function () {
       const thirdAmount = toWei('500')   // 50% of Pod
 
       // No Prize Yet; Shares and Ticket Balances match
-      await sharesToken.mock.totalSupply.returns(startAmount)  
+      await sharesToken.mock.totalSupply.returns(startAmount)
       await ticket.mock.balanceOf.withArgs(pod.address).returns(startAmount)
 
       // Test Balance Before Prize (minted 1:1)
@@ -226,8 +226,8 @@ describe('Pod Contract', function () {
       const amountToDeposit = toWei('10')
 
       // Mocks for Deposit
-      await sharesToken.mock.totalSupply.returns(toWei('0')) 
-      await sharesToken.mock.mint.returns()  
+      await sharesToken.mock.totalSupply.returns(toWei('0'))
+      await sharesToken.mock.mint.returns()
       await ticket.mock.mintTickets.withArgs(amountToDeposit).returns()
 
       // Perform Deposit
@@ -253,8 +253,8 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       // Mocks for Deposit
-      await sharesToken.mock.totalSupply.returns(toWei('0')) 
-      await sharesToken.mock.mint.returns()  
+      await sharesToken.mock.totalSupply.returns(toWei('0'))
+      await sharesToken.mock.mint.returns()
       await ticket.mock.mintTickets.withArgs(amountToDeposit).returns()
 
       // Perform Deposit
@@ -350,7 +350,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       debug('redeeming excessive shares...')
-      await sharesToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sharesToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userShares.mul(2))
       await sharesToken.mock.balanceOf.withArgs(receiver._address).returns(userShares)
       await expect(pod.connect(operator).operatorRedeemSharesInstantly(receiver._address, userShares.mul(2)))
         .to.be.revertedWith('Pod: Insufficient share balance');
@@ -362,7 +362,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       // Mock Pod-Shares/Tickets
-      await sharesToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sharesToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userShares)
       await sharesToken.mock.balanceOf.withArgs(receiver._address).returns(userShares)
       await sharesToken.mock.totalSupply.returns(userShares)
       await sharesToken.mock.burnFrom.withArgs(receiver._address, userShares).returns()
@@ -393,9 +393,9 @@ describe('Pod Contract', function () {
     it('should disallow anyone other than the operator to redeem pod-shares instantly', async () => {
       // Try to Redeem Pod-Shares
       debug('unauthorized user attempting to redeem shares...')
-      await sharesToken.mock.isOperatorFor.withArgs(otherWallet._address, wallet._address).returns(false)
+      await sharesToken.mock.allowance.withArgs(wallet._address, otherWallet._address).returns(toWei('0'))
       await expect(pod.connect(otherWallet).operatorRedeemSharesInstantly(wallet._address, toWei('100')))
-        .to.be.revertedWith('Pod: Invalid operator');
+        .to.be.revertedWith('Pod/exceeds-allowance');
     })
   })
 
@@ -501,7 +501,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       debug('redeeming excessive shares for user...')
-      await sharesToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sharesToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userShares.mul(2))
       await sharesToken.mock.balanceOf.withArgs(receiver._address).returns(userShares)
       await expect(pod.connect(operator).operatorRedeemSharesWithTimelock(receiver._address, userShares.mul(2)))
         .to.be.revertedWith('Pod: Insufficient share balance');
@@ -514,7 +514,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       // Mock Pod-Shares/Tickets
-      await sharesToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sharesToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userShares)
       await sharesToken.mock.balanceOf.withArgs(receiver._address).returns(userShares)
       await sharesToken.mock.totalSupply.returns(userShares)
       await sharesToken.mock.burnFrom.withArgs(receiver._address, userShares).returns()
@@ -548,9 +548,9 @@ describe('Pod Contract', function () {
     it('should disallow anyone other than the operator to redeem pod-shares with a timelock', async () => {
       // Try to Redeem Pod-Shares
       debug('unauthorized user attempting to redeem shares...')
-      await sharesToken.mock.isOperatorFor.withArgs(otherWallet._address, wallet._address).returns(false)
+      await sharesToken.mock.allowance.withArgs(wallet._address, otherWallet._address).returns(toWei('0'))
       await expect(pod.connect(otherWallet).operatorRedeemSharesWithTimelock(wallet._address, toWei('100')))
-        .to.be.revertedWith('Pod: Invalid operator');
+        .to.be.revertedWith('Pod/exceeds-allowance');
     })
   })
 
@@ -597,8 +597,8 @@ describe('Pod Contract', function () {
       const amountToDeposit = toWei('10')
 
       // Mocks for Sponsorship
-      await sponsorshipToken.mock.totalSupply.returns(toWei('0')) 
-      await sponsorshipToken.mock.mint.returns()  
+      await sponsorshipToken.mock.totalSupply.returns(toWei('0'))
+      await sponsorshipToken.mock.mint.returns()
       await ticket.mock.mintTickets.withArgs(amountToDeposit).returns()
 
       // Perform Sponsorship
@@ -623,8 +623,8 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       // Mocks for Sponsorship
-      await sponsorshipToken.mock.totalSupply.returns(toWei('0')) 
-      await sponsorshipToken.mock.mint.returns()  
+      await sponsorshipToken.mock.totalSupply.returns(toWei('0'))
+      await sponsorshipToken.mock.mint.returns()
       await ticket.mock.mintTickets.withArgs(amountToDeposit).returns()
 
       // Perform Sponsorship
@@ -702,7 +702,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       debug('redeeming excessive sponsorship tokens...')
-      await sponsorshipToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sponsorshipToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userTokens.mul(2))
       await sponsorshipToken.mock.balanceOf.withArgs(receiver._address).returns(userTokens)
       await expect(pod.connect(operator).operatorRedeemSponsorshipInstantly(receiver._address, userTokens.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance');
@@ -714,7 +714,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       // Mock Pod-Shares/Tickets
-      await sponsorshipToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sponsorshipToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userTokens)
       await sponsorshipToken.mock.balanceOf.withArgs(receiver._address).returns(userTokens)
       await sponsorshipToken.mock.totalSupply.returns(userTokens)
       await sponsorshipToken.mock.burnFrom.withArgs(receiver._address, userTokens).returns()
@@ -744,9 +744,9 @@ describe('Pod Contract', function () {
     it('should disallow anyone other than operator to redeem sponsorship tokens instantly', async () => {
       // Try to Redeem Pod-Shares
       debug('unauthorized user attempting to redeem sponsorship tokens...')
-      await sponsorshipToken.mock.isOperatorFor.withArgs(otherWallet._address, wallet._address).returns(false)
+      await sponsorshipToken.mock.allowance.withArgs(wallet._address, otherWallet._address).returns(toWei('0'))
       await expect(pod.connect(otherWallet).operatorRedeemSponsorshipInstantly(wallet._address, toWei('100')))
-        .to.be.revertedWith('Pod: Invalid operator');
+        .to.be.revertedWith('Pod/exceeds-allowance');
     })
   })
 
@@ -851,7 +851,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       debug('redeeming excessive shares for user...')
-      await sponsorshipToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sponsorshipToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userTokens.mul(2))
       await sponsorshipToken.mock.balanceOf.withArgs(receiver._address).returns(userTokens)
       await expect(pod.connect(operator).operatorRedeemSponsorshipWithTimelock(receiver._address, userTokens.mul(2)))
         .to.be.revertedWith('Pod: Insufficient sponsorship balance');
@@ -864,7 +864,7 @@ describe('Pod Contract', function () {
       const receiver = otherWallet
 
       // Mock Pod-Shares/Tickets
-      await sponsorshipToken.mock.isOperatorFor.withArgs(operator._address, receiver._address).returns(true)
+      await sponsorshipToken.mock.allowance.withArgs(receiver._address, operator._address).returns(userTokens)
       await sponsorshipToken.mock.balanceOf.withArgs(receiver._address).returns(userTokens)
       await sponsorshipToken.mock.totalSupply.returns(userTokens)
       await sponsorshipToken.mock.burnFrom.withArgs(receiver._address, userTokens).returns()
@@ -897,9 +897,9 @@ describe('Pod Contract', function () {
     it('should disallow anyone other than the operator to redeem sponsorship tokens with a timelock', async () => {
       // Try to Redeem Pod-Shares
       debug('unauthorized user attempting to redeem sponsorship tokens...')
-      await sponsorshipToken.mock.isOperatorFor.withArgs(otherWallet._address, wallet._address).returns(false)
+      await sponsorshipToken.mock.allowance.withArgs(wallet._address, otherWallet._address).returns(toWei('0'))
       await expect(pod.connect(otherWallet).operatorRedeemSponsorshipWithTimelock(wallet._address, toWei('100')))
-        .to.be.revertedWith('Pod: Invalid operator');
+        .to.be.revertedWith('Pod/exceeds-allowance');
     })
   })
 
@@ -1101,6 +1101,3 @@ describe('Pod Contract', function () {
   //   })
   // })
 })
-
-
-
