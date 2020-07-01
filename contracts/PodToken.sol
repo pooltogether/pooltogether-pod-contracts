@@ -1,7 +1,7 @@
 pragma solidity ^0.6.4;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/ERC777.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
@@ -14,7 +14,7 @@ import "@pooltogether/pooltogether-contracts/contracts/modules/ticket/Ticket.sol
 import "@pooltogether/pooltogether-contracts/contracts/modules/timelock/Timelock.sol";
 import "@pooltogether/pooltogether-contracts/contracts/Constants.sol";
 
-contract PodToken is Initializable, ERC777UpgradeSafe, BaseRelayRecipient {
+contract PodToken is Initializable, ERC20UpgradeSafe, BaseRelayRecipient {
     using SafeMath for uint256;
 
     // Address of the Controller Pod
@@ -34,12 +34,11 @@ contract PodToken is Initializable, ERC777UpgradeSafe, BaseRelayRecipient {
         string calldata _symbol,
         address _trustedForwarder,
         address _pod
-    ) 
-        external 
-        initializer 
+    )
+        external
+        initializer
     {
-        address[] memory _defaultOperators;
-        __ERC777_init(_name, _symbol, _defaultOperators);
+        __ERC20_init(_name, _symbol);
         trustedForwarder = _trustedForwarder;
         pod = _pod;
     }
@@ -59,14 +58,6 @@ contract PodToken is Initializable, ERC777UpgradeSafe, BaseRelayRecipient {
     //
     // Internal/Private
     //
-
-    function _mint(address _to, uint256 _amount) internal {
-        super._mint(_to, _amount, "", "");
-    }
-
-    function _burn(address _from, uint256 _amount) internal {
-        super._burn(_from, _amount, "", "");
-    }
 
     function _msgSender() internal override(BaseRelayRecipient, ContextUpgradeSafe) view returns (address payable) {
         return BaseRelayRecipient._msgSender();
