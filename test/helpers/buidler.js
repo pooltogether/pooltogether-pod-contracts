@@ -1,5 +1,5 @@
-const buidler = require("@nomiclabs/buidler")
+const buidler = require('@nomiclabs/buidler')
 
-buidler.ethers.errors.setLogLevel("error");
+buidler.ethers.errors.setLogLevel('error');
 
 module.exports = buidler

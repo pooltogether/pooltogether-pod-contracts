@@ -54,21 +54,17 @@ describe('PodFactory Contract', function () {
     it('Should create functional Pods', async function () {
       // Create a new Pod with a Pool Address
       const result = await podFactory.createPod(
-        POD.podSharesTokenName, 
-        POD.podSharesTokenSymbol, 
-        POD.podSponsorTokenName, 
-        POD.podSponsorTokenSymbol, 
-        POD.forwarder, 
+        POD.podSharesTokenName,
+        POD.podSharesTokenSymbol,
+        POD.podSponsorTokenName,
+        POD.podSponsorTokenSymbol,
+        POD.forwarder,
         POOL.address
       )
-      debug({ result })
 
       // Get a Receipt of the Transaction in order to verify Event Logs
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
-      debug({ receipt })
-
       const logs = receipt.logs.map((log) => podFactory.interface.parseLog(log))
-      debug({ logs })
 
       // Confirm Creation Event
       const expectedLog = _findLog(logs, 'PodCreated')
@@ -81,6 +77,3 @@ describe('PodFactory Contract', function () {
     })
   })
 })
-
-
-

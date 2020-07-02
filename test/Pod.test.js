@@ -1,9 +1,10 @@
 
 const buidler = require('./helpers/buidler')
-const { expect, use } = require('chai')
+const { expect } = require('chai')
 const { ethers } = buidler // require('ethers')
 const { getCurrentBlockTime } = require('./helpers/blockTime')
 const { increaseTime } = require('./helpers/increaseTime')
+require('./helpers/chaiMatchers')
 
 const { deployMockModule, Constants } = require('@pooltogether/pooltogether-contracts')
 const { deployContract, deployMockContract, solidity, MockProvider } = require('ethereum-waffle')
@@ -48,11 +49,6 @@ const _depositAssetsIntoPod = async (method, pod, amount, operator, reciever = {
   return { result, receipt }
 }
 
-
-
-
-use(solidity)
-
 describe('Pod Contract', function () {
   let wallet
   let otherWallet
@@ -65,6 +61,7 @@ describe('Pod Contract', function () {
   let sponsorshipToken
   let mintShares
   let mintSponsorship
+  let podLog
 
   const POD = {
     name: 'Pod',
@@ -79,8 +76,6 @@ describe('Pod Contract', function () {
 
   beforeEach(async () => {
     [wallet, otherWallet] = await buidler.ethers.getSigners()
-
-    // [wallet, otherWallet] = new MockProvider().getWallets()
 
     debug('creating manager and registry...')
     manager = await deployContract(wallet, ModuleManagerHarness, [], txOverrides)
@@ -178,48 +173,9 @@ describe('Pod Contract', function () {
     })
   })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   //
   // Mint/Redeem Pod-Shares
   //
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   describe('mintShares()', function () {
     it('should accept asset-tokens from user and deposit into prize-pool', async function () {
@@ -233,10 +189,7 @@ describe('Pod Contract', function () {
       // Perform Deposit
       debug('depositing assets...')
       const { receipt } = await mintShares(amountToDeposit, wallet)
-      debug({ receipt })
-
-      // Confirm Pod-Shares were minted to user
-      // expect('mint').to.be.calledOnContractWith(sharesToken, [wallet._address, amountToDeposit])
+      // debug({ receipt })
 
       // Confirm Deposit Event
       podLog.confirmEventLog(receipt, 'PodDeposit', {
@@ -260,10 +213,7 @@ describe('Pod Contract', function () {
       // Perform Deposit
       debug('depositing assets for user...')
       const { receipt } = await mintShares(amountToDeposit, operator, receiver)
-      debug({ receipt })
-
-      // Confirm Pod-Shares were minted to user not operator
-      // expect('mint').to.be.calledOnContractWith(sharesToken, [receiver._address, amountToDeposit])
+      // debug({ receipt })
 
       // Confirm Deposit Event
       podLog.confirmEventLog(receipt, 'PodDeposit', {
@@ -274,23 +224,37 @@ describe('Pod Contract', function () {
       })
     })
 
-    // TODO:
-    //   1. Have "Bob" buy tickets
-    //   2. Have the Pod win
-    //   3. Have "Alice" buy tickets"
-    //   4. Now assert that Alice's underlying balance matches her deposit
-    it('should calculate shares accurately when depositing assets into the pool')
+    it('should calculate shares accurately when depositing assets into the pool', async () => {
+      const amountToDeposit = toWei('10')
+      const prizeAmount = toWei('5')
+      let totalShares = toWei('0')
+      let totalTickets = toWei('0')
+      let shares
+
+      debug('Bob buys tickets...')
+      await sharesToken.mock.totalSupply.returns(totalShares)
+      shares = await pod.getTicketSharesForTest(amountToDeposit)
+      await sharesToken.mock.balanceOf.withArgs(wallet._address).returns(shares)
+      totalTickets = totalTickets.add(amountToDeposit)
+      totalShares = totalShares.add(shares)
+
+      debug('Pod wins prize...')
+      totalTickets = totalTickets.add(prizeAmount)
+      await ticket.mock.balanceOf.withArgs(pod.address).returns(totalTickets)
+
+      debug('Alice buys tickets...')
+      await sharesToken.mock.totalSupply.returns(totalShares)
+      shares = await pod.getTicketSharesForTest(amountToDeposit)
+      await sharesToken.mock.balanceOf.withArgs(otherWallet._address).returns(shares)
+      totalTickets = totalTickets.add(amountToDeposit)
+      totalShares = totalShares.add(shares)
+
+      debug('confirming Alice\'s balance...')
+      await ticket.mock.balanceOf.withArgs(pod.address).returns(totalTickets)
+      await sharesToken.mock.totalSupply.returns(totalShares)
+      expect(await pod.balanceOfUnderlying(otherWallet._address)).to.equalish(amountToDeposit) // Rounding errors of 1 WEI
+    })
   })
-
-
-
-
-
-
-
-
-
-
 
   describe('redeemSharesInstantly()', () => {
     it('should prevent a user from redeeming more shares than they hold', async () => {
@@ -333,15 +297,6 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.amount.add(fee)).to.equal(userShares)
     })
   })
-
-
-
-
-
-
-
-
-
 
   describe('operatorRedeemSharesInstantly()', () => {
     it('should prevent an operator from redeeming more shares than a user holds', async () => {
@@ -398,14 +353,6 @@ describe('Pod Contract', function () {
         .to.be.revertedWith('Pod/exceeds-allowance');
     })
   })
-
-
-
-
-
-
-
-
 
   describe('redeemSharesWithTimelock()', () => {
     it('should prevent a user from redeeming more shares than they hold', async () => {
@@ -483,17 +430,6 @@ describe('Pod Contract', function () {
     })
   })
 
-
-
-
-
-
-
-
-
-
-
-
   describe('operatorRedeemSharesWithTimelock()', () => {
     it('should prevent an operator from redeeming more shares than a user holds', async () => {
       const userShares = toWei('10')
@@ -554,43 +490,9 @@ describe('Pod Contract', function () {
     })
   })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   //
   // Mint/Redeem Sponsorship Tokens
   //
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   describe('mintSponsorship()', () => {
     it('should allow a user to sponsor the pod receiving sponsorship tokens', async () => {
@@ -604,7 +506,7 @@ describe('Pod Contract', function () {
       // Perform Sponsorship
       debug('depositing assets...')
       const { receipt } = await mintSponsorship(amountToDeposit, wallet)
-      debug({ receipt })
+      // debug({ receipt })
 
       // Confirm Pod-Shares were minted to user
       // expect('mint').to.be.calledOnContractWith(sponsorshipToken, [wallet._address, amountToDeposit])
@@ -630,10 +532,6 @@ describe('Pod Contract', function () {
       // Perform Sponsorship
       debug('depositing assets...')
       const { receipt } = await mintSponsorship(amountToDeposit, operator, receiver)
-      debug({ receipt })
-
-      // Confirm Pod-Shares were minted to user
-      // expect('mint').to.be.calledOnContractWith(sponsorshipToken, [receiver._address, amountToDeposit])
 
       // Confirm Sponsorship Event
       podLog.confirmEventLog(receipt, 'PodSponsored', {
@@ -643,11 +541,6 @@ describe('Pod Contract', function () {
       })
     })
   })
-
-
-
-
-
 
   describe('redeemSponsorshipInstantly()', () => {
     it('should prevent a user from redeeming more sponsorship tokens than they hold', async () => {
@@ -689,11 +582,6 @@ describe('Pod Contract', function () {
       expect(expectedLog.values.assets.add(fee)).to.equal(userTokens)
     })
   })
-
-
-
-
-
 
   describe('operatorRedeemSponsorshipInstantly()', () => {
     it('should prevent an operator from redeeming more sponsorship tokens than a user holds', async () => {
@@ -749,14 +637,6 @@ describe('Pod Contract', function () {
         .to.be.revertedWith('Pod/exceeds-allowance');
     })
   })
-
-
-
-
-
-
-
-
 
   describe('redeemSponsorshipWithTimelock()', () => {
     it('should prevent a user from redeeming more sponsorship tokens than they hold', async () => {
@@ -832,18 +712,6 @@ describe('Pod Contract', function () {
     })
   })
 
-
-
-
-
-
-
-
-
-
-
-
-
   describe('operatorRedeemSponsorshipWithTimelock()', () => {
     it('should prevent an operator from redeeming more sponsorship tokens than a user holds', async () => {
       const userTokens = toWei('10')
@@ -903,16 +771,6 @@ describe('Pod Contract', function () {
     })
   })
 
-
-
-
-
-
-
-
-
-
-
   //
   // Sweep & Exchange Rate
   //
@@ -925,7 +783,6 @@ describe('Pod Contract', function () {
       const blockTime = await getCurrentBlockTime()
       const unlockTime = 100
       const amountToDeposit = toWei('10')
-      const ticketTotal = amountToDeposit.mul(numAccounts)
 
       // Preset the Timelock Balance/Timestamp
       for await (let user of iterableAccounts()) {
@@ -936,23 +793,17 @@ describe('Pod Contract', function () {
 
       // Attempt to Sweep early BEFORE Redeeming for All Users
       debug('Sweeping early BEFORE redeem...')
-      debug({accountAddresses})
-      let result = await pod.sweepForUsers(accountAddresses)
-      let receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
-      podLog.confirmEventLog(receipt, 'PodSwept', {
-        total: toWei('0'),  // No funds swept
-      })
+      await expect(pod.sweepForUsers(accountAddresses))
+        .to.not.emit(pod, 'PodSwept')
 
       // Increase time to release the locked assets
       await increaseTime(unlockTime * 2)
 
       // Attempt to Sweep for all Users
       debug('Sweeping for all users...')
-      result = await pod.sweepForUsers(accountAddresses)
-      receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
-      podLog.confirmEventLog(receipt, 'PodSwept', {
-        total: ticketTotal
-      })
+      await expect(pod.sweepForUsers(accountAddresses))
+        .to.emit(pod, 'PodSwept')
+        .withArgs(wallet._address, accountAddresses[0], amountToDeposit)
 
       // Confirm everything was swept properly
       for await (let user of iterableAccounts()) {
