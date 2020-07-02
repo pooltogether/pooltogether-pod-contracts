@@ -114,7 +114,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function operatorRedeemSharesInstantly(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(podShares.isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podShares.allowance(_from, _operator) >= _shares, "Pod/exceeds-allowance");
 
         // Redeem Shares on behalf of User
         (uint256 _assets, uint256 _tickets) = _redeemSharesInstantly(_from, _shares);
@@ -137,7 +137,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function operatorRedeemSharesWithTimelock(address _from, uint256 _shares) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(podShares.isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podShares.allowance(_from, _operator) >= _shares, "Pod/exceeds-allowance");
 
         // Redeem Shares on behalf of User
         (uint256 _assets, uint256 _tickets, uint256 _timestamp) = _redeemSharesWithTimelock(_from, _shares);
@@ -172,7 +172,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function operatorRedeemSponsorshipInstantly(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(podSponsorship.isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podSponsorship.allowance(_from, _operator) >= _sponsorshipTokens, "Pod/exceeds-allowance");
 
         // Redeem Sponsorship Tokens on behalf of user
         uint256 _assets = _redeemSponsorshipInstantly(_from, _sponsorshipTokens);
@@ -195,7 +195,7 @@ contract Pod is Initializable, ReentrancyGuardUpgradeSafe, ContextUpgradeSafe, B
 
     function operatorRedeemSponsorshipWithTimelock(address _from, uint256 _sponsorshipTokens) external nonReentrant returns (uint256) {
         address _operator = _msgSender();
-        require(podSponsorship.isOperatorFor(_operator, _from), "Pod: Invalid operator");
+        require(podSponsorship.allowance(_from, _operator) >= _sponsorshipTokens, "Pod/exceeds-allowance");
 
         // Redeem Sponsorship Tokens
         (uint256 _assets, uint256 _timestamp) = _redeemSponsorshipWithTimelock(_from, _sponsorshipTokens);

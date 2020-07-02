@@ -29,7 +29,6 @@ describe('PodTokenFactory Contract', function () {
 
   beforeEach(async () => {
     [wallet] = await buidler.ethers.getSigners()
-    debug({ wallet })
 
     debug('deploying 1820...')
     registry = await deploy1820(wallet)
@@ -52,14 +51,10 @@ describe('PodTokenFactory Contract', function () {
     it('Should create functional Sponsorship Tokens', async function () {
       // Create a new Sponsorship Token & confirm event
       const result = await tokenFactory.createToken(TOKEN.name, TOKEN.symbol, TOKEN.forwarder, TOKEN.pod)
-      debug({ result })
 
       // Get a Receipt of the Transaction in order to verify Event Logs
       const receipt = await buidler.ethers.provider.getTransactionReceipt(result.hash)
-      debug({ receipt })
-
       const logs = receipt.logs.map((log) => tokenFactory.interface.parseLog(log))
-      debug({ logs })
 
       // Confirm Creation Event
       const expectedLog = _findLog(logs, 'ProxyCreated')
@@ -71,6 +66,3 @@ describe('PodTokenFactory Contract', function () {
     })
   })
 })
-
-
-

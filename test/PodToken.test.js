@@ -10,7 +10,7 @@ const PodToken = require('../build/PodToken.json')
 const toWei = ethers.utils.parseEther
 const debug = require('debug')('PodToken.test')
 const txOverrides = { gasLimit: 20000000 }
-
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 describe('PodToken Contract', function () {
   let wallet
@@ -62,8 +62,8 @@ describe('PodToken Contract', function () {
       // Perform minting & confirm event
       debug('minting tokens...')
       await expect(podToken.connect(TOKEN.podWallet).mint(wallet._address, amountToMint))
-        .to.emit(podToken, 'Minted')
-        .withArgs(TOKEN.podWallet._address, wallet._address, amountToMint, '0x', '0x');
+        .to.emit(podToken, 'Transfer')
+        .withArgs(ZERO_ADDRESS, wallet._address, amountToMint)
 
       // Confirm tokens were minted
       expect(await podToken.balanceOf(wallet._address)).to.equal(amountToMint)
@@ -80,7 +80,6 @@ describe('PodToken Contract', function () {
 
       // Attempt minting
       debug('attempt minting tokens...')
-      debug({account: mintReceiver})
       await expect(podToken.mint(mintReceiver, amountToMint)).to.be.revertedWith('PodToken: only pod');
     })
   })
@@ -134,6 +133,3 @@ describe('PodToken Contract', function () {
     })
   })
 })
-
-
-
