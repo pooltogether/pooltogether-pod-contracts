@@ -61,5 +61,10 @@
     "truffle-deploy-registry": "0.5.0",
     "truffle-extract": "pooltogether/truffle-extract#2a57b6e63a8a2057aad0fec63ba255cd46e9ff1d",
     "truffle-hdwallet-provider": "1.0.0-web3one.5"
-  }
+  },
+  "files": [
+    "LICENSE",
+    "abis/**",
+    "contracts/**"
+  ]
 }
